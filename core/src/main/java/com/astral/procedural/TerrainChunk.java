@@ -72,6 +72,8 @@ public class TerrainChunk implements Disposable {
     public static void initializeTextures(long seed) {
         if (texturesInitialized) return;
 
+        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Initializing terrain textures with seed: " + seed);
+
         desertTexture = DesertTextures.sand(256, 256, seed);
         desertRockTexture = DesertTextures.desertRock(256, 256, seed + 1000);
         iceTexture = ProceduralTexture.rock(256, 256, new Color(0.85f, 0.92f, 1f, 1f), seed);
@@ -79,6 +81,8 @@ public class TerrainChunk implements Disposable {
         forestTexture = ProceduralTexture.organicSkin(256, 256, new Color(0.3f, 0.5f, 0.2f, 1f), seed);
         rockyTexture = ProceduralTexture.rock(256, 256, new Color(0.5f, 0.45f, 0.4f, 1f), seed);
         oceanTexture = ProceduralTexture.rock(256, 256, new Color(0.9f, 0.85f, 0.7f, 1f), seed);
+
+        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Desert texture: " + (desertTexture != null ? "OK" : "NULL"));
 
         desertFeatureGenerator = new DesertFeatureGenerator(seed);
         texturesInitialized = true;
@@ -262,15 +266,18 @@ public class TerrainChunk implements Disposable {
         };
 
         if (texture != null) {
-            // Use texture with emissive for baseline visibility + diffuse for lighting
-            Color emissive = new Color(baseColor).mul(0.5f); // 50% self-illumination
+            // Texture with WHITE diffuse so texture colors show properly
+            // Mild emissive for baseline visibility (not too strong to wash out texture)
+            Color emissive = new Color(baseColor).mul(0.3f);
+            com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Creating material with texture for " + planetType);
             return new Material(
                 TextureAttribute.createDiffuse(texture),
-                ColorAttribute.createDiffuse(baseColor),
+                ColorAttribute.createDiffuse(Color.WHITE),
                 ColorAttribute.createEmissive(emissive)
             );
         } else {
-            // No texture - use solid color with emissive
+            // No texture - use solid color with stronger emissive
+            com.badlogic.gdx.Gdx.app.log("TerrainChunk", "WARNING: No texture for " + planetType + ", using solid color");
             Color emissive = new Color(baseColor).mul(0.5f);
             return new Material(
                 ColorAttribute.createDiffuse(baseColor),
