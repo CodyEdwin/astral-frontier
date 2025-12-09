@@ -18,7 +18,6 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset;
 import net.mgsx.gltf.scene3d.scene.SceneManager;
 import net.mgsx.gltf.scene3d.shaders.PBRShaderConfig;
 import net.mgsx.gltf.scene3d.shaders.PBRShaderProvider;
-import net.mgsx.gltf.scene3d.shaders.PBRDepthShaderProvider;
 
 /**
  * Renders GLTF weapon models with animations
@@ -71,8 +70,8 @@ public class GltfWeaponRenderer implements Disposable {
             PBRShaderConfig config = PBRShaderProvider.createDefaultConfig();
             config.numBones = 128;  // Support up to 128 bones
 
-            // Create scene manager with custom shader provider
-            sceneManager = new SceneManager(new PBRShaderProvider(config), new PBRDepthShaderProvider(config));
+            // Create scene manager with custom shader provider (depth shader uses default)
+            sceneManager = new SceneManager(new PBRShaderProvider(config));
 
             // Set up lighting
             Environment env = new Environment();
