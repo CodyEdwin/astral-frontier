@@ -128,8 +128,8 @@ public class TerrainChunk implements Disposable {
         int vertexCount = resolution * resolution;
         int indexCount = (resolution - 1) * (resolution - 1) * 6;
 
-        // Vertex format: position(3) + normal(3) + texcoord(2) + color(4)
-        int vertexSize = 12;
+        // Vertex format: position(3) + normal(3) + texcoord(2) - NO vertex colors
+        int vertexSize = 8;
         float[] vertices = new float[vertexCount * vertexSize];
         short[] indices = new short[indexCount];
 
@@ -138,8 +138,8 @@ public class TerrainChunk implements Disposable {
         float offsetX = chunkX * chunkWorldSize;
         float offsetZ = chunkZ * chunkWorldSize;
 
-        // Texture tiling
-        float textureTiling = 8f;
+        // Texture tiling - higher = more detail visible
+        float textureTiling = 16f;
 
         // Build vertices
         int vIdx = 0;
@@ -173,13 +173,6 @@ public class TerrainChunk implements Disposable {
                 float v = worldZ * textureTiling / chunkWorldSize;
                 vertices[vIdx++] = u;
                 vertices[vIdx++] = v;
-
-                // Color (height-based tint for variation)
-                Color color = getColorForHeight(height);
-                vertices[vIdx++] = color.r;
-                vertices[vIdx++] = color.g;
-                vertices[vIdx++] = color.b;
-                vertices[vIdx++] = color.a;
             }
         }
 
@@ -202,12 +195,11 @@ public class TerrainChunk implements Disposable {
             }
         }
 
-        // Create mesh with texture coordinates
+        // Create mesh with texture coordinates (no vertex colors - rely on texture)
         mesh = new Mesh(true, vertexCount, indexCount,
             new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
             new VertexAttribute(VertexAttributes.Usage.Normal, 3, "a_normal"),
-            new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"),
-            new VertexAttribute(VertexAttributes.Usage.ColorUnpacked, 4, "a_color")
+            new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0")
         );
         mesh.setVertices(vertices);
         mesh.setIndices(indices);

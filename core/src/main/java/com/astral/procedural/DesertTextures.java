@@ -22,25 +22,29 @@ public class DesertTextures {
         Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
 
         // Base sand colors
-        float baseR = 0.85f + random.nextFloat() * 0.1f;
-        float baseG = 0.72f + random.nextFloat() * 0.08f;
-        float baseB = 0.45f + random.nextFloat() * 0.1f;
+        float baseR = 0.82f;
+        float baseG = 0.68f;
+        float baseB = 0.42f;
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Multi-octave noise for natural variation
+                // Multi-octave noise for natural variation - MUCH stronger contrast
                 float noise = 0;
-                noise += perlinNoise(x * 0.1f, y * 0.1f, seed) * 0.5f;
-                noise += perlinNoise(x * 0.05f, y * 0.05f, seed + 1000) * 0.3f;
-                noise += perlinNoise(x * 0.2f, y * 0.2f, seed + 2000) * 0.2f;
+                noise += perlinNoise(x * 0.08f, y * 0.08f, seed) * 0.6f;
+                noise += perlinNoise(x * 0.15f, y * 0.15f, seed + 1000) * 0.4f;
+                noise += perlinNoise(x * 0.3f, y * 0.3f, seed + 2000) * 0.25f;
 
-                // Fine grain detail
-                float grain = (random.nextFloat() - 0.5f) * 0.08f;
+                // Fine grain detail - more visible
+                float grain = (random.nextFloat() - 0.5f) * 0.15f;
 
-                // Color variation
-                float r = clamp(baseR + noise * 0.15f + grain);
-                float g = clamp(baseG + noise * 0.12f + grain * 0.8f);
-                float b = clamp(baseB + noise * 0.1f + grain * 0.6f);
+                // Dune ripple pattern overlay
+                float ripple = MathUtils.sin((x + y * 0.5f) * 0.12f) * 0.15f;
+
+                // Color variation - MUCH stronger
+                float variation = noise * 0.35f + grain + ripple;
+                float r = clamp(baseR + variation);
+                float g = clamp(baseG + variation * 0.85f);
+                float b = clamp(baseB + variation * 0.6f);
 
                 pixmap.setColor(r, g, b, 1f);
                 pixmap.drawPixel(x, y);
