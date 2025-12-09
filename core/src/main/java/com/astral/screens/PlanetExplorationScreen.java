@@ -524,8 +524,8 @@ public class PlanetExplorationScreen implements Screen {
         float recoilX = weaponRecoil * -8f;
 
         // Base position (bottom right, angled like holding a rifle)
-        float baseX = width * 0.55f + bobX + recoilX;
-        float baseY = -height * 0.15f + bobY - recoilY;
+        float baseX = width * 0.45f + bobX + recoilX;
+        float baseY = height * 0.05f + bobY - recoilY;
 
         // Reload animation - weapon tilts down and to side
         float reloadTilt = 0f;
