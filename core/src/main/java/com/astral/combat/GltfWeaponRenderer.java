@@ -16,6 +16,9 @@ import net.mgsx.gltf.scene3d.animation.AnimationControllerHack;
 import net.mgsx.gltf.scene3d.scene.Scene;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
 import net.mgsx.gltf.scene3d.scene.SceneManager;
+import net.mgsx.gltf.scene3d.shaders.PBRShaderConfig;
+import net.mgsx.gltf.scene3d.shaders.PBRShaderProvider;
+import net.mgsx.gltf.scene3d.shaders.PBRDepthShaderProvider;
 
 /**
  * Renders GLTF weapon models with animations
@@ -64,8 +67,12 @@ public class GltfWeaponRenderer implements Disposable {
         if (initialized) return;
 
         try {
-            // Create scene manager
-            sceneManager = new SceneManager();
+            // Create shader config with enough bones for the SCAR model (120 bones)
+            PBRShaderConfig config = PBRShaderProvider.createDefaultConfig();
+            config.numBones = 128;  // Support up to 128 bones
+
+            // Create scene manager with custom shader provider
+            sceneManager = new SceneManager(new PBRShaderProvider(config), new PBRDepthShaderProvider(config));
 
             // Set up lighting
             Environment env = new Environment();
