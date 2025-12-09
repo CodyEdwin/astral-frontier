@@ -21,6 +21,9 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.astral.procedural.StructureGenerator;
+import com.astral.combat.Enemy;
+import com.astral.combat.GroundProjectile;
+import com.badlogic.gdx.utils.Array;
 
 /**
  * First-person exploration screen for planet surfaces
@@ -73,6 +76,19 @@ public class PlanetExplorationScreen implements Screen {
 
     // UI state
     private boolean showDebug = true;
+
+    // Combat
+    private Array<Enemy> enemies = new Array<>();
+    private Array<GroundProjectile> projectiles = new Array<>();
+    private float playerHealth = 100f;
+    private float playerMaxHealth = 100f;
+    private float weaponCooldown = 0f;
+    private float weaponFireRate = 0.15f;  // seconds between shots
+    private float weaponDamage = 25f;
+    private float projectileSpeed = 80f;
+    private int killCount = 0;
+    private float enemySpawnTimer = 0f;
+    private float enemySpawnInterval = 5f;
 
     public PlanetExplorationScreen(AstralFrontier game, long planetSeed, PlanetType planetType, String planetName) {
         this.game = game;
@@ -141,6 +157,9 @@ public class PlanetExplorationScreen implements Screen {
         // Update terrain chunk streaming
         planetSurface.update(playerPosition, delta);
 
+        // Update combat
+        updateCombat(delta);
+
         // Clear with dark color first
         Gdx.gl.glClearColor(0.02f, 0.02f, 0.05f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -155,6 +174,21 @@ public class PlanetExplorationScreen implements Screen {
         // Render 3D world
         modelBatch.begin(camera);
         planetSurface.render(modelBatch);
+
+        // Render enemies
+        for (Enemy enemy : enemies) {
+            if (enemy.isAlive()) {
+                modelBatch.render(enemy.getModelInstance(), planetSurface.getEnvironment());
+            }
+        }
+
+        // Render projectiles
+        for (GroundProjectile proj : projectiles) {
+            if (proj.isAlive()) {
+                modelBatch.render(proj.getModelInstance(), planetSurface.getEnvironment());
+            }
+        }
+
         modelBatch.end();
 
         // Render UI
@@ -317,6 +351,101 @@ public class PlanetExplorationScreen implements Screen {
         camera.update();
     }
 
+    private void updateCombat(float delta) {
+        // Weapon cooldown
+        weaponCooldown = Math.max(0, weaponCooldown - delta);
+
+        // Fire weapon on left click
+        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && weaponCooldown <= 0) {
+            fireWeapon();
+            weaponCooldown = weaponFireRate;
+        }
+
+        // Spawn enemies periodically
+        enemySpawnTimer += delta;
+        if (enemySpawnTimer >= enemySpawnInterval && enemies.size < 20) {
+            spawnEnemy();
+            enemySpawnTimer = 0;
+        }
+
+        // Update enemies
+        for (int i = enemies.size - 1; i >= 0; i--) {
+            Enemy enemy = enemies.get(i);
+            enemy.update(delta, playerPosition, (x, z) -> planetSurface.getHeightAt(x, z));
+
+            // Enemy attacks player
+            if (enemy.canAttackPlayer(playerPosition)) {
+                float damage = enemy.attack();
+                playerHealth -= damage;
+                Gdx.app.log("Combat", "Player hit for " + damage + " damage!");
+            }
+
+            // Clean up dead enemies
+            if (!enemy.isAlive()) {
+                killCount++;
+                enemy.dispose();
+                enemies.removeIndex(i);
+            }
+        }
+
+        // Update projectiles
+        for (int i = projectiles.size - 1; i >= 0; i--) {
+            GroundProjectile proj = projectiles.get(i);
+            proj.update(delta);
+
+            // Check terrain collision
+            float terrainHeight = planetSurface.getHeightAt(proj.getPosition().x, proj.getPosition().z);
+            proj.checkTerrainHit(terrainHeight);
+
+            // Check enemy collisions
+            for (Enemy enemy : enemies) {
+                if (proj.checkHit(enemy)) {
+                    break;
+                }
+            }
+
+            // Clean up dead projectiles
+            if (!proj.isAlive()) {
+                proj.dispose();
+                projectiles.removeIndex(i);
+            }
+        }
+
+        // Player death
+        if (playerHealth <= 0) {
+            playerHealth = 0;
+            // Could add death screen here
+        }
+    }
+
+    private void fireWeapon() {
+        // Get camera direction for aiming
+        Vector3 shootDir = new Vector3(camera.direction);
+
+        // Spawn projectile from camera position (slightly forward)
+        Vector3 spawnPos = new Vector3(camera.position).add(shootDir.x * 0.5f, shootDir.y * 0.5f, shootDir.z * 0.5f);
+
+        GroundProjectile proj = new GroundProjectile(spawnPos, shootDir, projectileSpeed, weaponDamage);
+        projectiles.add(proj);
+    }
+
+    private void spawnEnemy() {
+        // Spawn at random position around player
+        float angle = MathUtils.random(360f) * MathUtils.degreesToRadians;
+        float distance = 30f + MathUtils.random(30f);
+
+        float spawnX = playerPosition.x + MathUtils.cos(angle) * distance;
+        float spawnZ = playerPosition.z + MathUtils.sin(angle) * distance;
+        float spawnY = planetSurface.getHeightAt(spawnX, spawnZ);
+
+        // Random enemy type
+        Enemy.EnemyType[] types = Enemy.EnemyType.values();
+        Enemy.EnemyType type = types[MathUtils.random(types.length - 1)];
+
+        Enemy enemy = new Enemy(type, spawnX, spawnY, spawnZ);
+        enemies.add(enemy);
+    }
+
     private void renderUI() {
         spriteBatch.begin();
 
@@ -361,9 +490,42 @@ public class PlanetExplorationScreen implements Screen {
         font.setColor(Color.WHITE);
         font.draw(spriteBatch, "FUEL", fuelBarX - 50, fuelBarY + 12);
 
+        // Health bar (bottom left)
+        int healthBarWidth = 200;
+        int healthBarHeight = 20;
+        int healthBarX = 20;
+        int healthBarY = 60;
+
+        spriteBatch.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        // Background
+        shapeRenderer.setColor(0.3f, 0.1f, 0.1f, 0.8f);
+        shapeRenderer.rect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
+        // Health level
+        float healthPercent = playerHealth / playerMaxHealth;
+        if (healthPercent > 0.3f) {
+            shapeRenderer.setColor(0.2f, 0.8f, 0.3f, 1f); // Green
+        } else {
+            shapeRenderer.setColor(1f, 0.2f, 0.2f, 1f); // Red when low
+        }
+        shapeRenderer.rect(healthBarX, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
+        shapeRenderer.end();
+        spriteBatch.begin();
+
+        font.setColor(Color.WHITE);
+        font.draw(spriteBatch, "HEALTH", healthBarX, healthBarY + 38);
+
+        // Kill count
+        font.setColor(new Color(1f, 0.8f, 0.2f, 1f));
+        font.draw(spriteBatch, "KILLS: " + killCount, healthBarX + healthBarWidth + 30, healthBarY + 18);
+
+        // Enemy count
+        font.setColor(new Color(1f, 0.4f, 0.4f, 1f));
+        font.draw(spriteBatch, "ENEMIES: " + enemies.size, healthBarX + healthBarWidth + 130, healthBarY + 18);
+
         // Controls hint
         font.setColor(new Color(0.7f, 0.7f, 0.7f, 1f));
-        font.draw(spriteBatch, "WASD: Move | SHIFT: Sprint | SPACE: Jump | Double-SPACE: Jetpack | ESC: Return", 20, 30);
+        font.draw(spriteBatch, "WASD: Move | SHIFT: Sprint | SPACE: Jump | Double-SPACE: Jetpack | LMB: Shoot | ESC: Return", 20, 30);
 
         // Debug info
         if (showDebug) {
@@ -414,5 +576,15 @@ public class PlanetExplorationScreen implements Screen {
         if (shapeRenderer != null) shapeRenderer.dispose();
         if (font != null) font.dispose();
         if (planetSurface != null) planetSurface.dispose();
+
+        // Clean up combat
+        for (Enemy enemy : enemies) {
+            enemy.dispose();
+        }
+        enemies.clear();
+        for (GroundProjectile proj : projectiles) {
+            proj.dispose();
+        }
+        projectiles.clear();
     }
 }
