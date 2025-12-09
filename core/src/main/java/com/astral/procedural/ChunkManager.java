@@ -382,6 +382,11 @@ public class ChunkManager implements Disposable {
         for (TerrainChunk chunk : loadedChunks.values()) {
             if (chunk.isMeshBuilt() && chunk.isVisible && chunk.getModelInstance() != null) {
                 modelBatch.render(chunk.getModelInstance(), environment);
+
+                // Render desert features (cacti, rocks, etc.)
+                for (com.badlogic.gdx.graphics.g3d.ModelInstance feature : chunk.getFeatureInstances()) {
+                    modelBatch.render(feature, environment);
+                }
             }
         }
 

@@ -3,20 +3,23 @@ package com.astral.procedural;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
- * A single terrain chunk with heightmap-based mesh generation
+ * A single terrain chunk with heightmap-based mesh generation and textures
  */
 public class TerrainChunk implements Disposable {
 
@@ -35,8 +38,22 @@ public class TerrainChunk implements Disposable {
     public boolean isLoading = false;
     public boolean isVisible = true;
 
-    // Planet type for coloring
+    // Planet type for coloring/texturing
     private PlanetType planetType;
+
+    // Shared textures per planet type (static to avoid regenerating per chunk)
+    private static Texture desertTexture;
+    private static Texture desertRockTexture;
+    private static Texture iceTexture;
+    private static Texture lavaTexture;
+    private static Texture forestTexture;
+    private static Texture rockyTexture;
+    private static Texture oceanTexture;
+    private static boolean texturesInitialized = false;
+
+    // Desert features for this chunk
+    private Array<ModelInstance> featureInstances;
+    private static DesertFeatureGenerator desertFeatureGenerator;
 
     public TerrainChunk(int chunkX, int chunkZ, int size, float cellSize, PlanetType planetType) {
         this.chunkX = chunkX;
@@ -44,6 +61,40 @@ public class TerrainChunk implements Disposable {
         this.size = size;
         this.cellSize = cellSize;
         this.planetType = planetType;
+        this.featureInstances = new Array<>();
+    }
+
+    /**
+     * Initialize shared textures (call once on GL thread)
+     */
+    public static void initializeTextures(long seed) {
+        if (texturesInitialized) return;
+
+        desertTexture = DesertTextures.sand(256, 256, seed);
+        desertRockTexture = DesertTextures.desertRock(256, 256, seed + 1000);
+        iceTexture = ProceduralTexture.rock(256, 256, new Color(0.85f, 0.92f, 1f, 1f), seed);
+        lavaTexture = ProceduralTexture.rock(256, 256, new Color(0.3f, 0.1f, 0.05f, 1f), seed);
+        forestTexture = ProceduralTexture.organicSkin(256, 256, new Color(0.3f, 0.5f, 0.2f, 1f), seed);
+        rockyTexture = ProceduralTexture.rock(256, 256, new Color(0.5f, 0.45f, 0.4f, 1f), seed);
+        oceanTexture = ProceduralTexture.rock(256, 256, new Color(0.9f, 0.85f, 0.7f, 1f), seed);
+
+        desertFeatureGenerator = new DesertFeatureGenerator(seed);
+        texturesInitialized = true;
+    }
+
+    /**
+     * Dispose shared textures (call on game shutdown)
+     */
+    public static void disposeSharedTextures() {
+        if (desertTexture != null) { desertTexture.dispose(); desertTexture = null; }
+        if (desertRockTexture != null) { desertRockTexture.dispose(); desertRockTexture = null; }
+        if (iceTexture != null) { iceTexture.dispose(); iceTexture = null; }
+        if (lavaTexture != null) { lavaTexture.dispose(); lavaTexture = null; }
+        if (forestTexture != null) { forestTexture.dispose(); forestTexture = null; }
+        if (rockyTexture != null) { rockyTexture.dispose(); rockyTexture = null; }
+        if (oceanTexture != null) { oceanTexture.dispose(); oceanTexture = null; }
+        if (desertFeatureGenerator != null) { desertFeatureGenerator.dispose(); desertFeatureGenerator = null; }
+        texturesInitialized = false;
     }
 
     /**
@@ -59,19 +110,27 @@ public class TerrainChunk implements Disposable {
     public void buildMesh() {
         if (heightmap == null || meshBuilt) return;
 
+        // Ensure textures are initialized
+        if (!texturesInitialized) {
+            initializeTextures(chunkX * 12345L + chunkZ * 67890L);
+        }
+
         int resolution = heightmap.length;
         int vertexCount = resolution * resolution;
         int indexCount = (resolution - 1) * (resolution - 1) * 6;
 
-        // Vertex format: position(3) + normal(3) + color(4)
-        int vertexSize = 10;
+        // Vertex format: position(3) + normal(3) + texcoord(2) + color(4)
+        int vertexSize = 12;
         float[] vertices = new float[vertexCount * vertexSize];
         short[] indices = new short[indexCount];
 
-        // World offset for this chunk - use (resolution-1) cells per chunk for seamless tiling
+        // World offset for this chunk
         float chunkWorldSize = (size - 1) * cellSize;
         float offsetX = chunkX * chunkWorldSize;
         float offsetZ = chunkZ * chunkWorldSize;
+
+        // Texture tiling
+        float textureTiling = 8f;
 
         // Build vertices
         int vIdx = 0;
@@ -100,7 +159,13 @@ public class TerrainChunk implements Disposable {
                 vertices[vIdx++] = ny / nLen;
                 vertices[vIdx++] = nz / nLen;
 
-                // Color based on height and planet type
+                // Texture coordinates (world-space for seamless tiling)
+                float u = worldX * textureTiling / chunkWorldSize;
+                float v = worldZ * textureTiling / chunkWorldSize;
+                vertices[vIdx++] = u;
+                vertices[vIdx++] = v;
+
+                // Color (height-based tint for variation)
                 Color color = getColorForHeight(height);
                 vertices[vIdx++] = color.r;
                 vertices[vIdx++] = color.g;
@@ -118,29 +183,28 @@ public class TerrainChunk implements Disposable {
                 int bottomLeft = (z + 1) * resolution + x;
                 int bottomRight = bottomLeft + 1;
 
-                // Triangle 1
                 indices[iIdx++] = (short) topLeft;
                 indices[iIdx++] = (short) bottomLeft;
                 indices[iIdx++] = (short) topRight;
 
-                // Triangle 2
                 indices[iIdx++] = (short) topRight;
                 indices[iIdx++] = (short) bottomLeft;
                 indices[iIdx++] = (short) bottomRight;
             }
         }
 
-        // Create mesh
+        // Create mesh with texture coordinates
         mesh = new Mesh(true, vertexCount, indexCount,
             new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
             new VertexAttribute(VertexAttributes.Usage.Normal, 3, "a_normal"),
+            new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"),
             new VertexAttribute(VertexAttributes.Usage.ColorUnpacked, 4, "a_color")
         );
         mesh.setVertices(vertices);
         mesh.setIndices(indices);
 
-        // Create model
-        Material material = new Material(ColorAttribute.createDiffuse(Color.WHITE));
+        // Create textured material
+        Material material = createTerrainMaterial();
 
         model = new Model();
         MeshPart meshPart = new MeshPart();
@@ -164,12 +228,89 @@ public class TerrainChunk implements Disposable {
         model.manageDisposable(mesh);
 
         modelInstance = new ModelInstance(model);
+
+        // Generate desert features for this chunk
+        if (planetType == PlanetType.DESERT) {
+            generateDesertFeatures();
+        }
+
         meshBuilt = true;
     }
 
+    private Material createTerrainMaterial() {
+        Texture texture = switch (planetType) {
+            case DESERT -> desertTexture;
+            case ICE -> iceTexture;
+            case LAVA -> lavaTexture;
+            case FOREST -> forestTexture;
+            case ROCKY -> rockyTexture;
+            case OCEAN -> oceanTexture;
+            default -> desertTexture;
+        };
+
+        if (texture != null) {
+            return new Material(
+                TextureAttribute.createDiffuse(texture),
+                ColorAttribute.createDiffuse(Color.WHITE)
+            );
+        } else {
+            return new Material(ColorAttribute.createDiffuse(Color.WHITE));
+        }
+    }
+
+    private void generateDesertFeatures() {
+        if (desertFeatureGenerator == null || heightmap == null) return;
+
+        java.util.Random random = new java.util.Random(chunkX * 73856093L ^ chunkZ * 19349663L);
+
+        float chunkWorldSize = (size - 1) * cellSize;
+        float worldOffsetX = chunkX * chunkWorldSize;
+        float worldOffsetZ = chunkZ * chunkWorldSize;
+
+        // Number of features per chunk
+        int numFeatures = 2 + random.nextInt(4);
+
+        for (int i = 0; i < numFeatures; i++) {
+            // Random position within chunk
+            float localX = random.nextFloat() * chunkWorldSize;
+            float localZ = random.nextFloat() * chunkWorldSize;
+            float height = getHeightAt(localX, localZ);
+
+            float worldX = worldOffsetX + localX;
+            float worldZ = worldOffsetZ + localZ;
+
+            // Pick random feature type
+            DesertFeatureGenerator.DesertFeature[] features = DesertFeatureGenerator.DesertFeature.values();
+            DesertFeatureGenerator.DesertFeature feature = features[random.nextInt(features.length)];
+
+            // Scale based on feature type
+            float scale = switch (feature) {
+                case ROCK_SPIRE, ROCK_ARCH -> 0.8f + random.nextFloat() * 0.6f;
+                case BOULDER_CLUSTER -> 0.5f + random.nextFloat() * 0.5f;
+                case CACTUS_TALL -> 0.6f + random.nextFloat() * 0.4f;
+                case CACTUS_ROUND -> 0.4f + random.nextFloat() * 0.3f;
+                case DEAD_TREE -> 0.5f + random.nextFloat() * 0.4f;
+                case SAND_DUNE -> 1f + random.nextFloat() * 0.5f;
+                case OASIS_PALM -> 0.7f + random.nextFloat() * 0.3f;
+                case SKULL -> 0.3f + random.nextFloat() * 0.2f;
+                case ANCIENT_PILLAR -> 0.6f + random.nextFloat() * 0.4f;
+            };
+
+            long featureSeed = random.nextLong();
+            Model featureModel = desertFeatureGenerator.generate(feature, scale, featureSeed);
+            ModelInstance instance = new ModelInstance(featureModel);
+
+            // Position the feature on the terrain
+            instance.transform.setToTranslation(worldX, height, worldZ);
+
+            // Random Y rotation
+            instance.transform.rotate(Vector3.Y, random.nextFloat() * 360f);
+
+            featureInstances.add(instance);
+        }
+    }
+
     private Color getColorForHeight(float height) {
-        // Normalize height based on terrain generator output
-        // With plateau effect, heights are mostly flat with range around -15 to +15 for desert
         float normalizedHeight = (height + 20f) / 40f;
         normalizedHeight = Math.max(0, Math.min(1, normalizedHeight));
 
@@ -185,62 +326,55 @@ public class TerrainChunk implements Disposable {
     }
 
     private Color getDesertColor(float h) {
-        // Smooth gradient for realistic desert terrain
-        if (h < 0.25f) return new Color(0.65f, 0.5f, 0.35f, 1f);     // Low dark sand
-        else if (h < 0.45f) return new Color(0.78f, 0.65f, 0.45f, 1f); // Sand
-        else if (h < 0.55f) return new Color(0.85f, 0.72f, 0.5f, 1f);  // Mid sand (most common)
-        else if (h < 0.75f) return new Color(0.9f, 0.78f, 0.55f, 1f);  // Light sand
-        else return new Color(0.7f, 0.55f, 0.4f, 1f);                  // High rocky areas
+        if (h < 0.25f) return new Color(0.75f, 0.6f, 0.45f, 1f);
+        else if (h < 0.45f) return new Color(0.88f, 0.75f, 0.55f, 1f);
+        else if (h < 0.55f) return new Color(0.95f, 0.82f, 0.6f, 1f);
+        else if (h < 0.75f) return new Color(1f, 0.88f, 0.65f, 1f);
+        else return new Color(0.8f, 0.65f, 0.5f, 1f);
     }
 
     private Color getIceColor(float h) {
-        if (h < 0.3f) return new Color(0.6f, 0.7f, 0.85f, 1f);      // Deep ice
-        else if (h < 0.6f) return new Color(0.85f, 0.92f, 1f, 1f);  // Ice
-        else return new Color(1f, 1f, 1f, 1f);                      // Snow
+        if (h < 0.3f) return new Color(0.7f, 0.8f, 0.95f, 1f);
+        else if (h < 0.6f) return new Color(0.9f, 0.95f, 1f, 1f);
+        else return new Color(1f, 1f, 1f, 1f);
     }
 
     private Color getLavaColor(float h) {
-        if (h < 0.2f) return new Color(1f, 0.3f, 0f, 1f);           // Lava
-        else if (h < 0.4f) return new Color(0.4f, 0.15f, 0.05f, 1f); // Cooled rock
-        else return new Color(0.2f, 0.1f, 0.05f, 1f);               // Obsidian
+        if (h < 0.2f) return new Color(1f, 0.4f, 0.1f, 1f);
+        else if (h < 0.4f) return new Color(0.5f, 0.2f, 0.1f, 1f);
+        else return new Color(0.25f, 0.12f, 0.08f, 1f);
     }
 
     private Color getForestColor(float h) {
-        if (h < 0.3f) return new Color(0.15f, 0.35f, 0.15f, 1f);    // Dark grass
-        else if (h < 0.6f) return new Color(0.2f, 0.5f, 0.2f, 1f);  // Grass
-        else return new Color(0.4f, 0.35f, 0.25f, 1f);              // Dirt/rock
+        if (h < 0.3f) return new Color(0.2f, 0.45f, 0.2f, 1f);
+        else if (h < 0.6f) return new Color(0.3f, 0.6f, 0.25f, 1f);
+        else return new Color(0.5f, 0.45f, 0.35f, 1f);
     }
 
     private Color getRockyColor(float h) {
-        if (h < 0.3f) return new Color(0.35f, 0.3f, 0.28f, 1f);     // Dark rock
-        else if (h < 0.6f) return new Color(0.5f, 0.45f, 0.4f, 1f); // Rock
-        else return new Color(0.65f, 0.6f, 0.55f, 1f);              // Light rock
+        if (h < 0.3f) return new Color(0.45f, 0.4f, 0.38f, 1f);
+        else if (h < 0.6f) return new Color(0.6f, 0.55f, 0.5f, 1f);
+        else return new Color(0.75f, 0.7f, 0.65f, 1f);
     }
 
     private Color getOceanColor(float h) {
-        if (h < 0.3f) return new Color(0.1f, 0.3f, 0.5f, 1f);       // Deep water
-        else if (h < 0.5f) return new Color(0.2f, 0.5f, 0.7f, 1f);  // Shallow water
-        else return new Color(0.9f, 0.85f, 0.7f, 1f);               // Beach
+        if (h < 0.3f) return new Color(0.15f, 0.4f, 0.6f, 1f);
+        else if (h < 0.5f) return new Color(0.3f, 0.6f, 0.8f, 1f);
+        else return new Color(0.95f, 0.9f, 0.8f, 1f);
     }
 
-    /**
-     * Get height at local coordinates within this chunk
-     */
     public float getHeightAt(float localX, float localZ) {
         if (heightmap == null) return 0;
 
-        // Convert to heightmap indices
         float fx = localX / cellSize;
         float fz = localZ / cellSize;
 
         int x0 = (int) Math.floor(fx);
         int z0 = (int) Math.floor(fz);
 
-        // Clamp to valid range
         x0 = Math.max(0, Math.min(heightmap.length - 2, x0));
         z0 = Math.max(0, Math.min(heightmap.length - 2, z0));
 
-        // Bilinear interpolation
         float xFrac = fx - x0;
         float zFrac = fz - z0;
 
@@ -257,6 +391,10 @@ public class TerrainChunk implements Disposable {
 
     public ModelInstance getModelInstance() {
         return modelInstance;
+    }
+
+    public Array<ModelInstance> getFeatureInstances() {
+        return featureInstances;
     }
 
     public boolean isMeshBuilt() {
@@ -280,6 +418,7 @@ public class TerrainChunk implements Disposable {
         mesh = null;
         modelInstance = null;
         heightmap = null;
+        featureInstances.clear();
         meshBuilt = false;
     }
 }
