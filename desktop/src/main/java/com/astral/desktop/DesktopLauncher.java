@@ -24,7 +24,7 @@ public class DesktopLauncher {
 
         // Window behavior
         config.setResizable(true);
-        config.setWindowIcon("icons/icon128.png", "icons/icon64.png", "icons/icon32.png", "icons/icon16.png");
+        //config.setWindowIcon("icons/icon128.png", "icons/icon64.png", "icons/icon32.png", "icons/icon16.png");
 
         new Lwjgl3Application(new AstralFrontier(), config);
     }
