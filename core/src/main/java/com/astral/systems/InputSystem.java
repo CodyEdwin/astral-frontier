@@ -47,6 +47,7 @@ public class InputSystem extends GameSystem implements InputProcessor {
     public final Vector2 mouseDelta = new Vector2();
     public final Vector2 mousePosition = new Vector2();
     public boolean mouseLocked = true;
+    public float scrollY = 0f;
 
     // Debug
     public boolean[] debugKeys = new boolean[12]; // F1-F12
@@ -70,6 +71,7 @@ public class InputSystem extends GameSystem implements InputProcessor {
     public void update(float deltaTime) {
         // Reset per-frame values
         mouseDelta.setZero();
+        scrollY = 0f;
     }
 
     public void processInput() {
@@ -194,6 +196,7 @@ public class InputSystem extends GameSystem implements InputProcessor {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
+        scrollY = amountY;
         return true;
     }
 
