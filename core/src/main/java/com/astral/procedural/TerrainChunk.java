@@ -262,20 +262,19 @@ public class TerrainChunk implements Disposable {
         };
 
         if (texture != null) {
-            // Use texture with white diffuse so vertex colors multiply correctly
-            // Specular helps show lighting on terrain
+            // Use texture with emissive for baseline visibility + diffuse for lighting
+            Color emissive = new Color(baseColor).mul(0.5f); // 50% self-illumination
             return new Material(
                 TextureAttribute.createDiffuse(texture),
-                ColorAttribute.createDiffuse(Color.WHITE),
-                ColorAttribute.createSpecular(0.15f, 0.15f, 0.1f, 1f),
-                FloatAttribute.createShininess(8f)
+                ColorAttribute.createDiffuse(baseColor),
+                ColorAttribute.createEmissive(emissive)
             );
         } else {
-            // No texture - use solid color
+            // No texture - use solid color with emissive
+            Color emissive = new Color(baseColor).mul(0.5f);
             return new Material(
                 ColorAttribute.createDiffuse(baseColor),
-                ColorAttribute.createSpecular(0.1f, 0.1f, 0.08f, 1f),
-                FloatAttribute.createShininess(4f)
+                ColorAttribute.createEmissive(emissive)
             );
         }
     }
