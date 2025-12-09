@@ -115,6 +115,8 @@ public class TerrainChunk implements Disposable {
      */
     private static Texture loadTexture(String path) {
         try {
+        	//System.out.println(Gdx.files.getExternalStoragePath() + " : " + Gdx.files.getLocalStoragePath());
+        	//System.exit(0);
             FileHandle file = Gdx.files.internal(path);
             if (file.exists()) {
                 Texture tex = new Texture(file, true); // Generate mipmaps
