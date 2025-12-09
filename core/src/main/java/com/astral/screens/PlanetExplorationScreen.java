@@ -409,10 +409,7 @@ public class PlanetExplorationScreen implements Screen {
         }
 
         // Mouse scroll weapon switching
-        float scrollY = Gdx.input.getDeltaY();
-        float currentTime = System.nanoTime() / 1_000_000_000f;
-        if (!isSwitching && !reloading && Math.abs(inputSystem.scrollY) > 0.1f && currentTime - lastScrollTime > 0.15f) {
-            lastScrollTime = currentTime;
+        if (!isSwitching && !reloading && Math.abs(inputSystem.scrollY) > 0.1f) {
             if (inputSystem.scrollY > 0) {
                 // Scroll down - next weapon
                 switchToWeapon((currentWeaponIndex + 1) % weapons.length);
@@ -420,6 +417,8 @@ public class PlanetExplorationScreen implements Screen {
                 // Scroll up - previous weapon
                 switchToWeapon((currentWeaponIndex - 1 + weapons.length) % weapons.length);
             }
+            // Consume the scroll input
+            inputSystem.scrollY = 0f;
         }
 
         // Handle weapon switch animation - swap weapon when fully lowered
