@@ -1,12 +1,18 @@
 package com.astral.procedural;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
@@ -24,10 +30,94 @@ public class StructureGenerator {
     private final Random random;
     private final ModelBuilder modelBuilder;
 
+    // Shared file-based textures
+    private static Texture pyramidStoneTexture;
+    private static Texture ancientStoneTexture;
+    private static Texture sandstoneTexture;
+    private static Texture templeStoneTexture;
+    private static Texture obeliskTexture;
+    private static boolean texturesLoaded = false;
+
     public StructureGenerator(long seed) {
         this.seed = seed;
         this.random = new Random(seed);
         this.modelBuilder = new ModelBuilder();
+        loadTextures();
+    }
+
+    /**
+     * Load file-based textures (called once)
+     */
+    private static void loadTextures() {
+        if (texturesLoaded) return;
+
+        System.out.println("[StructureGenerator] Loading textures...");
+
+        pyramidStoneTexture = loadTexture("textures/pyramid_stone.jpg");
+        ancientStoneTexture = loadTexture("textures/ancient_stone.jpg");
+        sandstoneTexture = loadTexture("textures/sandstone.jpg");
+        // Temple and obelisk can share textures
+        templeStoneTexture = loadTexture("textures/ancient_stone.jpg");
+        obeliskTexture = loadTexture("textures/sandstone.jpg");
+
+        texturesLoaded = true;
+        System.out.println("[StructureGenerator] Textures loaded");
+    }
+
+    private static Texture loadTexture(String path) {
+        try {
+            FileHandle file = Gdx.files.internal(path);
+            if (file.exists()) {
+                Texture tex = new Texture(file, true);
+                tex.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
+                tex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+                System.out.println("[StructureGenerator] Loaded: " + path);
+                return tex;
+            }
+        } catch (Exception e) {
+            System.out.println("[StructureGenerator] Failed to load " + path + ": " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Get material with texture or color fallback
+     */
+    private Material getMaterial(String type) {
+        Texture tex = switch (type) {
+            case "pyramid" -> pyramidStoneTexture;
+            case "ancient", "ruins", "temple" -> ancientStoneTexture;
+            case "sandstone", "sphinx" -> sandstoneTexture;
+            case "obelisk" -> obeliskTexture;
+            default -> null;
+        };
+
+        if (tex != null) {
+            return new Material(TextureAttribute.createDiffuse(tex));
+        }
+
+        // Fallback to color
+        Color color = switch (type) {
+            case "pyramid" -> new Color(0.85f, 0.75f, 0.55f, 1f);
+            case "ancient", "ruins" -> new Color(0.7f, 0.6f, 0.45f, 1f);
+            case "temple" -> new Color(0.8f, 0.7f, 0.5f, 1f);
+            case "obelisk" -> new Color(0.3f, 0.25f, 0.2f, 1f);
+            case "sphinx", "sandstone" -> new Color(0.85f, 0.75f, 0.55f, 1f);
+            default -> new Color(0.7f, 0.6f, 0.5f, 1f);
+        };
+        return new Material(ColorAttribute.createDiffuse(color));
+    }
+
+    /**
+     * Dispose shared textures (call on game shutdown)
+     */
+    public static void disposeSharedTextures() {
+        if (pyramidStoneTexture != null) { pyramidStoneTexture.dispose(); pyramidStoneTexture = null; }
+        if (ancientStoneTexture != null) { ancientStoneTexture.dispose(); ancientStoneTexture = null; }
+        if (sandstoneTexture != null) { sandstoneTexture.dispose(); sandstoneTexture = null; }
+        if (templeStoneTexture != null) { templeStoneTexture.dispose(); templeStoneTexture = null; }
+        if (obeliskTexture != null) { obeliskTexture.dispose(); obeliskTexture = null; }
+        texturesLoaded = false;
     }
 
     /**
@@ -198,13 +288,11 @@ public class StructureGenerator {
 
     public StructurePlacement createPyramid(Vector3 position, float baseSize, float height, String name) {
         modelBuilder.begin();
-        
-        Material stoneMaterial = new Material(
-            ColorAttribute.createDiffuse(new Color(0.85f, 0.75f, 0.55f, 1f))
-        );
-        
+
+        Material stoneMaterial = getMaterial("pyramid");
+
         MeshPartBuilder builder = modelBuilder.part("pyramid", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates,
             stoneMaterial);
         
         float half = baseSize / 2f;
@@ -225,12 +313,10 @@ public class StructureGenerator {
         buildTriangle(builder, v0, v2, v1);
         
         // Add weathered details - stepped sides
-        Material weatheredMaterial = new Material(
-            ColorAttribute.createDiffuse(new Color(0.75f, 0.65f, 0.45f, 1f))
-        );
-        
+        Material weatheredMaterial = getMaterial("ancient");
+
         MeshPartBuilder detailBuilder = modelBuilder.part("details", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates,
             weatheredMaterial);
         
         // Add entrance
@@ -247,13 +333,11 @@ public class StructureGenerator {
 
     public StructurePlacement createRuins(Vector3 position, float size) {
         modelBuilder.begin();
-        
-        Material ruinMaterial = new Material(
-            ColorAttribute.createDiffuse(new Color(0.7f, 0.6f, 0.45f, 1f))
-        );
-        
+
+        Material ruinMaterial = getMaterial("ruins");
+
         MeshPartBuilder builder = modelBuilder.part("ruins", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates,
             ruinMaterial);
         
         // Scattered broken columns
@@ -297,13 +381,11 @@ public class StructureGenerator {
 
     public StructurePlacement createObelisk(Vector3 position, float baseSize, float height) {
         modelBuilder.begin();
-        
-        Material obeliskMaterial = new Material(
-            ColorAttribute.createDiffuse(new Color(0.3f, 0.25f, 0.2f, 1f))
-        );
-        
+
+        Material obeliskMaterial = getMaterial("obelisk");
+
         MeshPartBuilder builder = modelBuilder.part("obelisk", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates,
             obeliskMaterial);
         
         // Tapered shaft
@@ -334,13 +416,11 @@ public class StructureGenerator {
 
     public StructurePlacement createTemple(Vector3 position, float width, float height) {
         modelBuilder.begin();
-        
-        Material templeMaterial = new Material(
-            ColorAttribute.createDiffuse(new Color(0.8f, 0.7f, 0.5f, 1f))
-        );
-        
+
+        Material templeMaterial = getMaterial("temple");
+
         MeshPartBuilder builder = modelBuilder.part("temple", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates,
             templeMaterial);
         
         float depth = width * 0.8f;
@@ -385,13 +465,11 @@ public class StructureGenerator {
 
     public StructurePlacement createSphinx(Vector3 position, float length, float height) {
         modelBuilder.begin();
-        
-        Material sphinxMaterial = new Material(
-            ColorAttribute.createDiffuse(new Color(0.85f, 0.75f, 0.55f, 1f))
-        );
-        
+
+        Material sphinxMaterial = getMaterial("sphinx");
+
         MeshPartBuilder builder = modelBuilder.part("sphinx", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
+            VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates,
             sphinxMaterial);
         
         // Body (elongated box)
@@ -428,9 +506,9 @@ public class StructureGenerator {
     private void buildTriangle(MeshPartBuilder builder, Vector3 v0, Vector3 v1, Vector3 v2) {
         Vector3 normal = new Vector3(v1).sub(v0).crs(new Vector3(v2).sub(v0)).nor();
         builder.triangle(
-            new MeshPartBuilder.VertexInfo().setPos(v0).setNor(normal),
-            new MeshPartBuilder.VertexInfo().setPos(v1).setNor(normal),
-            new MeshPartBuilder.VertexInfo().setPos(v2).setNor(normal)
+            new MeshPartBuilder.VertexInfo().setPos(v0).setNor(normal).setUV(0, 0),
+            new MeshPartBuilder.VertexInfo().setPos(v1).setNor(normal).setUV(1, 0),
+            new MeshPartBuilder.VertexInfo().setPos(v2).setNor(normal).setUV(0.5f, 1)
         );
     }
 
@@ -470,8 +548,13 @@ public class StructureGenerator {
     }
 
     private void buildQuad(MeshPartBuilder builder, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3) {
-        buildTriangle(builder, v0, v1, v2);
-        buildTriangle(builder, v0, v2, v3);
+        Vector3 normal = new Vector3(v1).sub(v0).crs(new Vector3(v3).sub(v0)).nor();
+        builder.rect(
+            new MeshPartBuilder.VertexInfo().setPos(v0).setNor(normal).setUV(0, 0),
+            new MeshPartBuilder.VertexInfo().setPos(v1).setNor(normal).setUV(1, 0),
+            new MeshPartBuilder.VertexInfo().setPos(v2).setNor(normal).setUV(1, 1),
+            new MeshPartBuilder.VertexInfo().setPos(v3).setNor(normal).setUV(0, 1)
+        );
     }
 
     private void addColumn(MeshPartBuilder builder, float x, float y, float z, 
