@@ -27,7 +27,7 @@ subprojects {
             options.encoding = "UTF-8"
         }
     }
-    apply(plugin = "maven-publish")
+    /*apply(plugin = "maven-publish")
     configure<PublishingExtension> {
         repositories {
             maven {
@@ -44,5 +44,5 @@ subprojects {
                 from(components["java"])
             }
         }
-        }
+        }*/
 }
