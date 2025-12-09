@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -101,6 +102,7 @@ public class DesertFeatureGenerator implements Disposable {
 
     /**
      * Get material for a feature, using file texture or fallback to procedural
+     * All materials have backface culling disabled to ensure all faces are visible
      */
     private Material getMaterial(String type) {
         Texture tex = switch (type) {
@@ -116,7 +118,11 @@ public class DesertFeatureGenerator implements Disposable {
         };
 
         if (tex != null) {
-            return new Material(TextureAttribute.createDiffuse(tex));
+            // Disable backface culling (0 = GL_NONE) so both sides of faces are visible
+            return new Material(
+                TextureAttribute.createDiffuse(tex),
+                IntAttribute.createCullFace(0)
+            );
         }
 
         // Fallback to procedural texture
@@ -128,7 +134,11 @@ public class DesertFeatureGenerator implements Disposable {
             default -> DesertTextures.desertRock(64, 64, random.nextLong());
         };
         textures.add(fallback);
-        return new Material(TextureAttribute.createDiffuse(fallback));
+        // Disable backface culling for procedural textures too
+        return new Material(
+            TextureAttribute.createDiffuse(fallback),
+            IntAttribute.createCullFace(0)
+        );
     }
 
     public Model generate(DesertFeature feature, float scale, long featureSeed) {

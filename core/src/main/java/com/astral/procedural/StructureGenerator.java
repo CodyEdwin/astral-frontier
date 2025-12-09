@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -82,6 +83,7 @@ public class StructureGenerator {
 
     /**
      * Get material with texture or color fallback
+     * All materials have backface culling disabled to ensure all faces are visible
      */
     private Material getMaterial(String type) {
         Texture tex = switch (type) {
@@ -93,7 +95,11 @@ public class StructureGenerator {
         };
 
         if (tex != null) {
-            return new Material(TextureAttribute.createDiffuse(tex));
+            // Disable backface culling (0 = GL_NONE) so both sides of faces are visible
+            return new Material(
+                TextureAttribute.createDiffuse(tex),
+                IntAttribute.createCullFace(0)
+            );
         }
 
         // Fallback to color
@@ -105,7 +111,11 @@ public class StructureGenerator {
             case "sphinx", "sandstone" -> new Color(0.85f, 0.75f, 0.55f, 1f);
             default -> new Color(0.7f, 0.6f, 0.5f, 1f);
         };
-        return new Material(ColorAttribute.createDiffuse(color));
+        // Disable backface culling for color materials too
+        return new Material(
+            ColorAttribute.createDiffuse(color),
+            IntAttribute.createCullFace(0)
+        );
     }
 
     /**
