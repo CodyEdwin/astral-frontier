@@ -22,7 +22,7 @@ public class BulletHoleManager implements Disposable {
     private static final int GRID_SIZE = 8;  // 8x8 grid
     private static final int TOTAL_HOLES = 64;
     private static final int MAX_BULLET_HOLES = 100;  // Max visible at once
-    private static final float DECAL_SIZE = 0.5f;  // Size in world units
+    private static final float DECAL_SIZE = 0.8f;  // Size in world units (increased for visibility)
     private static final float FADE_START_TIME = 10f;  // Start fading after 10 seconds
     private static final float FADE_DURATION = 5f;  // Fade out over 5 seconds
 
@@ -32,6 +32,7 @@ public class BulletHoleManager implements Disposable {
     private Array<BulletHole> bulletHoles;
     private Random random;
     private boolean initialized = false;
+    private PerspectiveCamera camera;
 
     public BulletHoleManager() {
         this.bulletHoles = new Array<>();
@@ -43,6 +44,8 @@ public class BulletHoleManager implements Disposable {
      */
     public void initialize(PerspectiveCamera camera) {
         if (initialized) return;
+
+        this.camera = camera;
 
         try {
             // Load sprite sheet
@@ -73,6 +76,7 @@ public class BulletHoleManager implements Disposable {
             Gdx.app.log("BulletHoleManager", "Initialized with " + TOTAL_HOLES + " bullet hole variants (" + cellWidth + "x" + cellHeight + " each)");
         } catch (Exception e) {
             Gdx.app.error("BulletHoleManager", "Failed to initialize: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -82,7 +86,10 @@ public class BulletHoleManager implements Disposable {
      * @param normal Surface normal at hit point (for orientation)
      */
     public void addBulletHole(Vector3 position, Vector3 normal) {
-        if (!initialized || bulletHoleRegions == null) return;
+        if (!initialized || bulletHoleRegions == null) {
+            Gdx.app.log("BulletHoleManager", "Cannot add bullet hole - not initialized");
+            return;
+        }
 
         // Remove oldest if at max capacity
         while (bulletHoles.size >= MAX_BULLET_HOLES) {
@@ -93,26 +100,28 @@ public class BulletHoleManager implements Disposable {
         int variant = random.nextInt(TOTAL_HOLES);
         TextureRegion region = bulletHoleRegions[variant];
 
-        // Create decal
+        // Create decal with transparency
         Decal decal = Decal.newDecal(DECAL_SIZE, DECAL_SIZE, region, true);
-        decal.setPosition(position.x, position.y + 0.01f, position.z);  // Slight offset to prevent z-fighting
 
-        // Orient decal to face up (for terrain hits) with random rotation
-        decal.setRotationX(90);  // Lay flat on ground
-        decal.setRotationZ(random.nextFloat() * 360f);  // Random spin
+        // Position slightly above terrain to prevent z-fighting
+        decal.setPosition(position.x, position.y + 0.02f, position.z);
 
-        // If we have a proper normal, orient to surface
-        if (normal != null && normal.y < 0.9f) {
-            // For non-flat surfaces, orient decal to face along normal
-            // This is simplified - proper implementation would use quaternions
-            decal.lookAt(position.cpy().add(normal), Vector3.Y);
-        }
+        // For ground decals: make them face upward (lying flat on ground)
+        // Use lookAt to orient the decal to face the normal direction
+        Vector3 lookTarget = new Vector3(position.x, position.y + 1f, position.z);
+        decal.lookAt(lookTarget, Vector3.Z);
+
+        // Apply random rotation around the up axis
+        float randomRotation = random.nextFloat() * 360f;
+        decal.rotateZ(randomRotation);
 
         // Set blending for transparency
         decal.setBlending(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         BulletHole hole = new BulletHole(decal, 0f);
         bulletHoles.add(hole);
+
+        Gdx.app.log("BulletHoleManager", "Added bullet hole at " + position + ", total: " + bulletHoles.size);
     }
 
     /**
@@ -143,12 +152,22 @@ public class BulletHoleManager implements Disposable {
      * Render all bullet holes
      */
     public void render() {
-        if (!initialized || decalBatch == null) return;
+        if (!initialized || decalBatch == null || bulletHoles.size == 0) return;
+
+        // Enable blending for transparency
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+        // Disable depth write but keep depth test so decals appear on terrain
+        Gdx.gl.glDepthMask(false);
 
         for (BulletHole hole : bulletHoles) {
             decalBatch.add(hole.decal);
         }
         decalBatch.flush();
+
+        // Restore depth write
+        Gdx.gl.glDepthMask(true);
     }
 
     /**

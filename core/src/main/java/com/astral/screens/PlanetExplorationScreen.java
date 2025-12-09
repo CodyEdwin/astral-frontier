@@ -530,14 +530,12 @@ public class PlanetExplorationScreen implements Screen {
             justFired = true;
 
             // Play weapon sound based on weapon type
-            // Fast-firing weapons use automatic sound, slow weapons use pistol sound
-            if (currentWeapon.fireRate < 0.2f) {
-                // Automatic weapons (PLASMA_RIFLE, PULSE_SMG)
+            // Only PULSE_SMG uses automatic sound, all others use pistol shot
+            if (currentWeapon == WeaponType.PULSE_SMG) {
                 if (automaticWeaponSound != null) {
                     automaticWeaponSound.play(0.5f);  // Lower volume to avoid clipping on rapid fire
                 }
             } else {
-                // Semi-auto weapons (LASER_PISTOL, SCATTER_GUN, RAIL_CANNON)
                 if (pistolShotSound != null) {
                     pistolShotSound.play(0.7f);
                 }
