@@ -105,10 +105,12 @@ public class BuildingGenerator implements Disposable {
     private ArchitectureStyle getStyleForPlanet(PlanetType planetType) {
         return switch (planetType) {
             case DESERT, ROCKY -> ArchitectureStyle.ANCIENT;
-            case FOREST, PARADISE -> ArchitectureStyle.ALIEN_ORGANIC;
+            case FOREST -> ArchitectureStyle.ALIEN_ORGANIC;
             case ICE -> ArchitectureStyle.ALIEN_CRYSTAL;
-            case VOLCANIC, TOXIC -> ArchitectureStyle.MILITARY;
+            case LAVA -> ArchitectureStyle.MILITARY;
             case OCEAN -> ArchitectureStyle.HUMAN;
+            case GAS_GIANT -> ArchitectureStyle.ALIEN_CRYSTAL;
+            case BARREN -> ArchitectureStyle.ANCIENT;
         };
     }
 

@@ -69,7 +69,7 @@ public class CreatureGenerator implements Disposable {
     }
 
     /**
-     * Generate a specific creature type
+     * Generate a specific creature type with base color
      */
     public Model generateCreature(CreatureType type, CreatureSize size, Color baseColor, long creatureSeed) {
         random.setSeed(creatureSeed);
@@ -94,16 +94,24 @@ public class CreatureGenerator implements Disposable {
         return model;
     }
 
+    /**
+     * Generate a specific creature type for a planet
+     */
+    public Model generateCreature(CreatureType type, CreatureSize size, PlanetType planetType, long creatureSeed) {
+        Color baseColor = getCreatureColor(planetType);
+        return generateCreature(type, size, baseColor, creatureSeed);
+    }
+
     private CreatureType getCreatureTypeForPlanet(PlanetType planetType) {
         return switch (planetType) {
             case DESERT -> random.nextFloat() < 0.5f ? CreatureType.INSECTOID : CreatureType.SERPENT;
             case FOREST -> random.nextFloat() < 0.5f ? CreatureType.QUADRUPED : CreatureType.BIPED;
             case ICE -> random.nextFloat() < 0.5f ? CreatureType.QUADRUPED : CreatureType.AMORPHOUS;
-            case VOLCANIC -> CreatureType.CRUSTACEAN;
+            case LAVA -> CreatureType.CRUSTACEAN;
             case OCEAN -> random.nextFloat() < 0.5f ? CreatureType.SERPENT : CreatureType.AMORPHOUS;
             case ROCKY -> CreatureType.INSECTOID;
-            case TOXIC -> CreatureType.AMORPHOUS;
-            case PARADISE -> random.nextFloat() < 0.5f ? CreatureType.FLYING : CreatureType.QUADRUPED;
+            case GAS_GIANT -> CreatureType.FLYING;
+            case BARREN -> CreatureType.AMORPHOUS;
         };
     }
 
@@ -112,11 +120,11 @@ public class CreatureGenerator implements Disposable {
             case DESERT -> new Color(0.7f + random.nextFloat() * 0.2f, 0.5f + random.nextFloat() * 0.2f, 0.3f, 1f);
             case FOREST -> new Color(0.3f + random.nextFloat() * 0.2f, 0.5f + random.nextFloat() * 0.3f, 0.2f, 1f);
             case ICE -> new Color(0.8f + random.nextFloat() * 0.2f, 0.85f + random.nextFloat() * 0.15f, 0.9f, 1f);
-            case VOLCANIC -> new Color(0.4f + random.nextFloat() * 0.2f, 0.2f, 0.1f, 1f);
+            case LAVA -> new Color(0.4f + random.nextFloat() * 0.2f, 0.2f, 0.1f, 1f);
             case OCEAN -> new Color(0.2f, 0.4f + random.nextFloat() * 0.2f, 0.6f + random.nextFloat() * 0.2f, 1f);
             case ROCKY -> new Color(0.5f + random.nextFloat() * 0.2f, 0.45f, 0.4f, 1f);
-            case TOXIC -> new Color(0.5f + random.nextFloat() * 0.3f, 0.8f, 0.2f, 1f);
-            case PARADISE -> new Color(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1f);
+            case GAS_GIANT -> new Color(0.8f + random.nextFloat() * 0.2f, 0.6f, 0.4f, 1f);
+            case BARREN -> new Color(0.5f + random.nextFloat() * 0.2f, 0.5f, 0.5f, 1f);
         };
     }
 
