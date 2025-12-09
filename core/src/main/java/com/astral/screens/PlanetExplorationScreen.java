@@ -48,6 +48,17 @@ public class PlanetExplorationScreen implements Screen {
     private float jumpVelocity = 8f;
     private float gravity = -20f;
 
+    // Jetpack
+    private boolean jetpackActive = false;
+    private float jetpackFuel = 100f;
+    private float jetpackMaxFuel = 100f;
+    private float jetpackThrust = 15f;
+    private float jetpackFuelConsumption = 20f; // per second while thrusting
+    private float jetpackFuelRecharge = 10f;    // per second when grounded
+    private float lastSpacePress = 0f;
+    private float doubleTapThreshold = 0.3f;    // seconds
+    private boolean spaceWasPressed = false;
+
     // Input
     private InputSystem inputSystem;
 
@@ -169,6 +180,30 @@ public class PlanetExplorationScreen implements Screen {
     }
 
     private void updatePlayer(float delta) {
+        // Double-tap space detection for jetpack toggle
+        boolean spacePressed = inputSystem.jump;
+        if (spacePressed && !spaceWasPressed) {
+            float currentTime = System.nanoTime() / 1_000_000_000f;
+            if (currentTime - lastSpacePress < doubleTapThreshold) {
+                // Double tap detected - toggle jetpack
+                jetpackActive = !jetpackActive;
+                if (jetpackActive) {
+                    Gdx.app.log("Jetpack", "ACTIVATED");
+                } else {
+                    Gdx.app.log("Jetpack", "DEACTIVATED");
+                }
+                lastSpacePress = 0; // Reset to prevent triple-tap toggle
+            } else {
+                lastSpacePress = currentTime;
+            }
+        }
+        spaceWasPressed = spacePressed;
+
+        // Recharge fuel when grounded
+        if (isGrounded && jetpackFuel < jetpackMaxFuel) {
+            jetpackFuel = Math.min(jetpackMaxFuel, jetpackFuel + jetpackFuelRecharge * delta);
+        }
+
         // Get movement input
         Vector3 moveDir = new Vector3();
 
@@ -183,24 +218,35 @@ public class PlanetExplorationScreen implements Screen {
             moveDir.rotate(Vector3.Y, -cameraYaw);
         }
 
-        // Apply speed
+        // Apply speed (faster when jetpacking)
         float speed = inputSystem.sprint ? sprintSpeed : walkSpeed;
+        if (jetpackActive && !isGrounded) speed *= 1.5f; // Faster in air with jetpack
         moveDir.scl(speed);
 
         // Set horizontal velocity
         playerVelocity.x = moveDir.x;
         playerVelocity.z = moveDir.z;
 
-        // Apply gravity
-        playerVelocity.y += gravity * delta;
+        // Apply gravity (reduced when jetpack active)
+        float effectiveGravity = jetpackActive ? gravity * 0.3f : gravity;
+        playerVelocity.y += effectiveGravity * delta;
 
         // Clamp falling speed
         playerVelocity.y = Math.max(playerVelocity.y, -50f);
 
-        // Jump
-        if (inputSystem.jump && isGrounded) {
-            playerVelocity.y = jumpVelocity;
-            isGrounded = false;
+        // Jetpack thrust or normal jump
+        if (inputSystem.jump) {
+            if (jetpackActive && jetpackFuel > 0) {
+                // Jetpack thrust
+                playerVelocity.y = jetpackThrust;
+                jetpackFuel -= jetpackFuelConsumption * delta;
+                jetpackFuel = Math.max(0, jetpackFuel);
+                isGrounded = false;
+            } else if (isGrounded) {
+                // Normal jump
+                playerVelocity.y = jumpVelocity;
+                isGrounded = false;
+            }
         }
 
         // Calculate new position
@@ -284,9 +330,40 @@ public class PlanetExplorationScreen implements Screen {
         font.setColor(new Color(0.8f, 0.9f, 1f, 1f));
         font.draw(spriteBatch, planetSurface.getType().displayName + ": " + planetSurface.getName(), 20, Gdx.graphics.getHeight() - 20);
 
+        // Jetpack status
+        if (jetpackActive) {
+            font.setColor(new Color(0.3f, 1f, 0.5f, 1f));
+            font.draw(spriteBatch, "JETPACK ACTIVE", Gdx.graphics.getWidth() - 180, Gdx.graphics.getHeight() - 20);
+        }
+
+        // Jetpack fuel bar
+        int fuelBarWidth = 150;
+        int fuelBarHeight = 12;
+        int fuelBarX = Gdx.graphics.getWidth() - 170;
+        int fuelBarY = Gdx.graphics.getHeight() - 55;
+
+        spriteBatch.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        // Background
+        shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 0.8f);
+        shapeRenderer.rect(fuelBarX, fuelBarY, fuelBarWidth, fuelBarHeight);
+        // Fuel level
+        float fuelPercent = jetpackFuel / jetpackMaxFuel;
+        if (fuelPercent > 0.3f) {
+            shapeRenderer.setColor(0.3f, 0.8f, 1f, 1f); // Blue
+        } else {
+            shapeRenderer.setColor(1f, 0.3f, 0.3f, 1f); // Red when low
+        }
+        shapeRenderer.rect(fuelBarX, fuelBarY, fuelBarWidth * fuelPercent, fuelBarHeight);
+        shapeRenderer.end();
+        spriteBatch.begin();
+
+        font.setColor(Color.WHITE);
+        font.draw(spriteBatch, "FUEL", fuelBarX - 50, fuelBarY + 12);
+
         // Controls hint
         font.setColor(new Color(0.7f, 0.7f, 0.7f, 1f));
-        font.draw(spriteBatch, "WASD: Move | SHIFT: Sprint | SPACE: Jump | ESC: Return to Ship", 20, 30);
+        font.draw(spriteBatch, "WASD: Move | SHIFT: Sprint | SPACE: Jump | Double-SPACE: Jetpack | ESC: Return", 20, 30);
 
         // Debug info
         if (showDebug) {
