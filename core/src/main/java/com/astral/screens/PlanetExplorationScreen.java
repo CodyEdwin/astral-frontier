@@ -25,6 +25,7 @@ import com.astral.combat.Enemy;
 import com.astral.combat.GroundProjectile;
 import com.astral.combat.WeaponType;
 import com.astral.combat.WeaponRenderer;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.utils.Array;
 
 /**
@@ -114,6 +115,10 @@ public class PlanetExplorationScreen implements Screen {
     private float normalFOV = 75f;
     private float aimFOV = 45f;
 
+    // Weapon sounds
+    private Sound automaticWeaponSound;
+    private Sound pistolShotSound;
+
     public PlanetExplorationScreen(AstralFrontier game, long planetSeed, PlanetType planetType, String planetName) {
         this.game = game;
 
@@ -163,6 +168,20 @@ public class PlanetExplorationScreen implements Screen {
         }
         currentWeapon = WeaponType.PLASMA_RIFLE;
         currentWeaponIndex = 0;
+
+        // Load weapon sounds
+        try {
+            automaticWeaponSound = Gdx.audio.newSound(Gdx.files.internal("audio/automatic-weapon.mp3"));
+            Gdx.app.log("Audio", "Loaded automatic-weapon.mp3");
+        } catch (Exception e) {
+            Gdx.app.error("Audio", "Failed to load automatic-weapon.mp3: " + e.getMessage());
+        }
+        try {
+            pistolShotSound = Gdx.audio.newSound(Gdx.files.internal("audio/pistol-shot.mp3"));
+            Gdx.app.log("Audio", "Loaded pistol-shot.mp3");
+        } catch (Exception e) {
+            Gdx.app.error("Audio", "Failed to load pistol-shot.mp3: " + e.getMessage());
+        }
 
         Gdx.app.log("PlanetExploration", "Spawned at " + playerPosition);
     }
@@ -485,6 +504,20 @@ public class PlanetExplorationScreen implements Screen {
             weaponAmmo[currentWeaponIndex]--;
             justFired = true;
 
+            // Play weapon sound based on weapon type
+            // Fast-firing weapons use automatic sound, slow weapons use pistol sound
+            if (currentWeapon.fireRate < 0.2f) {
+                // Automatic weapons (PLASMA_RIFLE, PULSE_SMG)
+                if (automaticWeaponSound != null) {
+                    automaticWeaponSound.play(0.5f);  // Lower volume to avoid clipping on rapid fire
+                }
+            } else {
+                // Semi-auto weapons (LASER_PISTOL, SCATTER_GUN, RAIL_CANNON)
+                if (pistolShotSound != null) {
+                    pistolShotSound.play(0.7f);
+                }
+            }
+
             // Auto-reload when empty
             if (weaponAmmo[currentWeaponIndex] <= 0 && weaponReserve[currentWeaponIndex] > 0) {
                 reloading = true;
@@ -786,5 +819,9 @@ public class PlanetExplorationScreen implements Screen {
             proj.dispose();
         }
         projectiles.clear();
+
+        // Dispose weapon sounds
+        if (automaticWeaponSound != null) automaticWeaponSound.dispose();
+        if (pistolShotSound != null) pistolShotSound.dispose();
     }
 }
