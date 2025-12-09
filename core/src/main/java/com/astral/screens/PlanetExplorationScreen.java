@@ -543,12 +543,12 @@ public class PlanetExplorationScreen implements Screen {
         // Recoil - gun kicks back toward player
         float recoilAmt = weaponRecoil * 12f * (1f - aimTransition * 0.5f);
 
-        // Hip fire position (bottom right)
-        float hipX = width * 0.72f;
+        // Hip fire position (centered)
+        float hipX = width * 0.5f;
         float hipY = height * 0.08f;
 
-        // ADS position (more centered, higher)
-        float adsX = width * 0.52f;
+        // ADS position (centered, higher)
+        float adsX = width * 0.5f;
         float adsY = height * 0.28f;
 
         float baseX = MathUtils.lerp(hipX, adsX, aimTransition) + bobX;
