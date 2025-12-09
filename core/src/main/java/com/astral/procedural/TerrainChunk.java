@@ -265,23 +265,18 @@ public class TerrainChunk implements Disposable {
             default -> new Color(0.7f, 0.6f, 0.5f, 1f);
         };
 
+        // Force full emissive brightness to debug - terrain should glow bright
+        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Creating material for " + planetType + " texture=" + (texture != null));
+
         if (texture != null) {
-            // Texture with WHITE diffuse so texture colors show properly
-            // Mild emissive for baseline visibility (not too strong to wash out texture)
-            Color emissive = new Color(baseColor).mul(0.3f);
-            com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Creating material with texture for " + planetType);
+            // Full emissive = self-lit terrain, ignores lighting completely
             return new Material(
                 TextureAttribute.createDiffuse(texture),
-                ColorAttribute.createDiffuse(Color.WHITE),
-                ColorAttribute.createEmissive(emissive)
+                ColorAttribute.createEmissive(new Color(1f, 1f, 1f, 1f))  // FULL WHITE emissive
             );
         } else {
-            // No texture - use solid color with stronger emissive
-            com.badlogic.gdx.Gdx.app.log("TerrainChunk", "WARNING: No texture for " + planetType + ", using solid color");
-            Color emissive = new Color(baseColor).mul(0.5f);
             return new Material(
-                ColorAttribute.createDiffuse(baseColor),
-                ColorAttribute.createEmissive(emissive)
+                ColorAttribute.createEmissive(baseColor)  // Full color as emissive
             );
         }
     }
