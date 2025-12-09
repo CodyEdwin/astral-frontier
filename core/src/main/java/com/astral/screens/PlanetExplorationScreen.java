@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.astral.procedural.StructureGenerator;
+import com.astral.combat.BulletHoleManager;
 import com.astral.combat.Enemy;
 import com.astral.combat.GroundProjectile;
 import com.astral.combat.WeaponType;
@@ -123,6 +124,9 @@ public class PlanetExplorationScreen implements Screen {
     private float hitmarkerTimer = 0f;
     private static final float HITMARKER_DURATION = 0.15f;
 
+    // Bullet holes
+    private BulletHoleManager bulletHoleManager;
+
     public PlanetExplorationScreen(AstralFrontier game, long planetSeed, PlanetType planetType, String planetName) {
         this.game = game;
 
@@ -187,6 +191,10 @@ public class PlanetExplorationScreen implements Screen {
             Gdx.app.error("Audio", "Failed to load pistol-shot.mp3: " + e.getMessage());
         }
 
+        // Initialize bullet hole manager
+        bulletHoleManager = new BulletHoleManager();
+        bulletHoleManager.initialize(camera);
+
         Gdx.app.log("PlanetExploration", "Spawned at " + playerPosition);
     }
 
@@ -247,6 +255,11 @@ public class PlanetExplorationScreen implements Screen {
         }
 
         modelBatch.end();
+
+        // Render bullet hole decals
+        if (bulletHoleManager != null) {
+            bulletHoleManager.render();
+        }
 
         // Render UI
         renderUI();
@@ -419,6 +432,11 @@ public class PlanetExplorationScreen implements Screen {
         // Hitmarker decay
         hitmarkerTimer = Math.max(0, hitmarkerTimer - delta);
 
+        // Update bullet holes
+        if (bulletHoleManager != null) {
+            bulletHoleManager.update(delta);
+        }
+
         // Reset just fired flag
         justFired = false;
 
@@ -566,7 +584,12 @@ public class PlanetExplorationScreen implements Screen {
 
             // Check terrain collision
             float terrainHeight = planetSurface.getHeightAt(proj.getPosition().x, proj.getPosition().z);
-            proj.checkTerrainHit(terrainHeight);
+            if (proj.checkTerrainHit(terrainHeight)) {
+                // Add bullet hole at impact point
+                Vector3 hitPos = proj.getPosition().cpy();
+                hitPos.y = terrainHeight;
+                bulletHoleManager.addBulletHole(hitPos, Vector3.Y);
+            }
 
             // Check enemy collisions
             for (Enemy enemy : enemies) {
@@ -889,5 +912,8 @@ public class PlanetExplorationScreen implements Screen {
         // Dispose weapon sounds
         if (automaticWeaponSound != null) automaticWeaponSound.dispose();
         if (pistolShotSound != null) pistolShotSound.dispose();
+
+        // Dispose bullet hole manager
+        if (bulletHoleManager != null) bulletHoleManager.dispose();
     }
 }
