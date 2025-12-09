@@ -1,9 +1,13 @@
 package com.astral.procedural;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -74,18 +78,57 @@ public class TerrainChunk implements Disposable {
 
         System.out.println("[TerrainChunk] Initializing terrain textures with seed: " + seed);
 
-        desertTexture = DesertTextures.sand(256, 256, seed);
-        desertRockTexture = DesertTextures.desertRock(256, 256, seed + 1000);
+        // Load desert textures from assets (user-provided textures)
+        desertTexture = loadTexture("textures/sandy_gravel.jpg");
+        desertRockTexture = loadTexture("textures/rock.png");
+
+        // Fallback to procedural if file textures fail
+        if (desertTexture == null) {
+            System.out.println("[TerrainChunk] sandy_gravel.jpg not found, using procedural texture");
+            desertTexture = DesertTextures.sand(256, 256, seed);
+        }
+        if (desertRockTexture == null) {
+            System.out.println("[TerrainChunk] rock.png not found, using procedural texture");
+            desertRockTexture = DesertTextures.desertRock(256, 256, seed + 1000);
+        }
+
+        // Load rocky texture from assets or use procedural fallback
+        rockyTexture = loadTexture("textures/rock.png");
+        if (rockyTexture == null) {
+            rockyTexture = ProceduralTexture.rock(256, 256, new Color(0.5f, 0.45f, 0.4f, 1f), seed);
+        }
+
+        // Other planet types use procedural textures for now
         iceTexture = ProceduralTexture.rock(256, 256, new Color(0.85f, 0.92f, 1f, 1f), seed);
         lavaTexture = ProceduralTexture.rock(256, 256, new Color(0.3f, 0.1f, 0.05f, 1f), seed);
         forestTexture = ProceduralTexture.organicSkin(256, 256, new Color(0.3f, 0.5f, 0.2f, 1f), seed);
-        rockyTexture = ProceduralTexture.rock(256, 256, new Color(0.5f, 0.45f, 0.4f, 1f), seed);
         oceanTexture = ProceduralTexture.rock(256, 256, new Color(0.9f, 0.85f, 0.7f, 1f), seed);
 
         System.out.println("[TerrainChunk] Desert texture: " + (desertTexture != null ? "OK" : "NULL"));
 
         desertFeatureGenerator = new DesertFeatureGenerator(seed);
         texturesInitialized = true;
+    }
+
+    /**
+     * Load a texture from assets with proper filtering and wrapping for terrain
+     */
+    private static Texture loadTexture(String path) {
+        try {
+            FileHandle file = Gdx.files.internal(path);
+            if (file.exists()) {
+                Texture tex = new Texture(file, true); // Generate mipmaps
+                tex.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
+                tex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+                System.out.println("[TerrainChunk] Loaded texture: " + path);
+                return tex;
+            } else {
+                System.out.println("[TerrainChunk] Texture not found: " + path);
+            }
+        } catch (Exception e) {
+            System.out.println("[TerrainChunk] Failed to load texture " + path + ": " + e.getMessage());
+        }
+        return null;
     }
 
     /**
