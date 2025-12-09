@@ -83,7 +83,7 @@ public class WeaponRenderer {
 
         // Calculate tilt toward crosshair (center of screen) when hip-firing
         // Tilt decreases as we aim down sights
-        float tiltAmount = (1f - aimTransition) * -0.15f;  // Negative to tilt left toward center
+        float tiltAmount = (1f - aimTransition) * 0.15f;  // Positive to tilt toward center
 
         // Weapon switch animation - slide down
         baseY -= (1f - switchProgress) * height * 0.4f;
