@@ -23,6 +23,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.astral.procedural.StructureGenerator;
 import com.astral.combat.BulletHoleManager;
 import com.astral.combat.Enemy;
+import com.astral.combat.GltfWeaponRenderer;
 import com.astral.combat.GroundProjectile;
 import com.astral.combat.WeaponType;
 import com.astral.combat.WeaponRenderer;
@@ -96,6 +97,7 @@ public class PlanetExplorationScreen implements Screen {
 
     // Weapon system
     private WeaponRenderer weaponRenderer;
+    private GltfWeaponRenderer gltfWeaponRenderer;  // GLTF animated weapon for PLASMA_RIFLE
     private WeaponType currentWeapon = WeaponType.PLASMA_RIFLE;
     private WeaponType pendingWeapon = null;  // For weapon switching
     private int currentWeaponIndex = 0;
@@ -172,6 +174,11 @@ public class PlanetExplorationScreen implements Screen {
 
         // Initialize weapon system
         weaponRenderer = new WeaponRenderer(shapeRenderer);
+
+        // Initialize GLTF weapon renderer for PLASMA_RIFLE
+        gltfWeaponRenderer = new GltfWeaponRenderer();
+        gltfWeaponRenderer.initialize(camera);
+
         WeaponType[] weapons = WeaponType.values();
         for (int i = 0; i < weapons.length; i++) {
             weaponAmmo[i] = weapons[i].maxAmmo;
@@ -255,6 +262,14 @@ public class PlanetExplorationScreen implements Screen {
         // Render bullet hole decals
         if (bulletHoleManager != null) {
             bulletHoleManager.render();
+        }
+
+        // Render GLTF weapon for PLASMA_RIFLE
+        if (weaponEquipped && currentWeapon == WeaponType.PLASMA_RIFLE &&
+            gltfWeaponRenderer != null && gltfWeaponRenderer.isInitialized()) {
+            // Clear depth buffer so weapon renders on top
+            Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+            gltfWeaponRenderer.render();
         }
 
         // Render UI
@@ -476,6 +491,11 @@ public class PlanetExplorationScreen implements Screen {
         aiming = Gdx.input.isButtonPressed(Input.Buttons.RIGHT) && weaponEquipped && !reloading && !isSwitching;
         weaponRenderer.update(delta, isMoving, aiming, justFired, isSwitching);
 
+        // Update GLTF weapon if using PLASMA_RIFLE
+        if (currentWeapon == WeaponType.PLASMA_RIFLE && gltfWeaponRenderer != null && gltfWeaponRenderer.isInitialized()) {
+            gltfWeaponRenderer.update(delta, camera, isMoving, aiming, justFired, reloading);
+        }
+
         // Adjust FOV based on aim
         camera.fieldOfView = MathUtils.lerp(normalFOV, aimFOV, weaponRenderer.getAimTransition());
 
@@ -689,8 +709,10 @@ public class PlanetExplorationScreen implements Screen {
             shapeRenderer.end();
         }
 
-        // Draw weapon (first-person gun view)
-        if (weaponEquipped) {
+        // Draw weapon (first-person gun view) - skip if using GLTF weapon
+        boolean useGltfWeapon = currentWeapon == WeaponType.PLASMA_RIFLE &&
+                                gltfWeaponRenderer != null && gltfWeaponRenderer.isInitialized();
+        if (weaponEquipped && !useGltfWeapon) {
             int ammo = weaponAmmo[currentWeaponIndex];
             int maxAmmo = currentWeapon.maxAmmo;
             float reloadProgress = reloading ? 1f - (reloadTimer / currentWeapon.reloadTime) : 0f;
@@ -927,6 +949,9 @@ public class PlanetExplorationScreen implements Screen {
         if (scatterGunSound != null) scatterGunSound.dispose();
         if (railCannonSound != null) railCannonSound.dispose();
         if (pulseSMGSound != null) pulseSMGSound.dispose();
+
+        // Dispose GLTF weapon renderer
+        if (gltfWeaponRenderer != null) gltfWeaponRenderer.dispose();
 
         // Dispose bullet hole manager
         if (bulletHoleManager != null) bulletHoleManager.dispose();

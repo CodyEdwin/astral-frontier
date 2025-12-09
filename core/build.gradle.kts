@@ -3,6 +3,7 @@ plugins {
 }
 
 val gdxVersion: String by project
+val gdxGltfVersion: String by project
 val kryonetVersion: String by project
 val kryoVersion: String by project
 val gsonVersion: String by project
@@ -12,6 +13,9 @@ dependencies {
     // LibGDX Core
     api("com.badlogicgames.gdx:gdx:$gdxVersion")
     api("com.badlogicgames.gdx:gdx-bullet:$gdxVersion")
+
+    // GLTF support for animated 3D models
+    api("com.github.mgsx-dev.gdx-gltf:gltf:$gdxGltfVersion")
 
     // Networking - exclude old kryo from kryonet to avoid conflicts
     api("com.esotericsoftware:kryonet:$kryonetVersion") {
