@@ -1,8 +1,12 @@
 package com.astral.procedural;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -27,6 +31,17 @@ public class DesertFeatureGenerator implements Disposable {
     private final Array<Texture> textures = new Array<>();
     private final Array<Model> models = new Array<>();
 
+    // Shared file-based textures (loaded once)
+    private static Texture sandstoneTexture;
+    private static Texture cactusTexture;
+    private static Texture palmBarkTexture;
+    private static Texture palmFrondTexture;
+    private static Texture deadWoodTexture;
+    private static Texture boneTexture;
+    private static Texture ancientStoneTexture;
+    private static Texture pyramidStoneTexture;
+    private static boolean fileTexturesLoaded = false;
+
     public enum DesertFeature {
         ROCK_SPIRE,
         ROCK_ARCH,
@@ -44,6 +59,76 @@ public class DesertFeatureGenerator implements Disposable {
         this.seed = seed;
         this.random = new Random(seed);
         this.modelBuilder = new ModelBuilder();
+        loadFileTextures();
+    }
+
+    /**
+     * Load file-based textures (called once)
+     */
+    private static void loadFileTextures() {
+        if (fileTexturesLoaded) return;
+
+        System.out.println("[DesertFeatureGenerator] Loading file-based textures...");
+
+        sandstoneTexture = loadTexture("textures/sandstone.jpg");
+        cactusTexture = loadTexture("textures/cactus.jpg");
+        palmBarkTexture = loadTexture("textures/palm_bark.jpg");
+        palmFrondTexture = loadTexture("textures/palm_frond.jpg");
+        deadWoodTexture = loadTexture("textures/dead_wood.jpg");
+        boneTexture = loadTexture("textures/bone.jpg");
+        ancientStoneTexture = loadTexture("textures/ancient_stone.jpg");
+        pyramidStoneTexture = loadTexture("textures/pyramid_stone.jpg");
+
+        fileTexturesLoaded = true;
+        System.out.println("[DesertFeatureGenerator] File textures loaded");
+    }
+
+    private static Texture loadTexture(String path) {
+        try {
+            FileHandle file = Gdx.files.internal(path);
+            if (file.exists()) {
+                Texture tex = new Texture(file, true);
+                tex.setFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
+                tex.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+                System.out.println("[DesertFeatureGenerator] Loaded: " + path);
+                return tex;
+            }
+        } catch (Exception e) {
+            System.out.println("[DesertFeatureGenerator] Failed to load " + path + ": " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Get material for a feature, using file texture or fallback to procedural
+     */
+    private Material getMaterial(String type) {
+        Texture tex = switch (type) {
+            case "sandstone" -> sandstoneTexture;
+            case "cactus" -> cactusTexture;
+            case "palm_bark" -> palmBarkTexture;
+            case "palm_frond" -> palmFrondTexture;
+            case "dead_wood" -> deadWoodTexture;
+            case "bone" -> boneTexture;
+            case "ancient_stone" -> ancientStoneTexture;
+            case "pyramid_stone" -> pyramidStoneTexture;
+            default -> null;
+        };
+
+        if (tex != null) {
+            return new Material(TextureAttribute.createDiffuse(tex));
+        }
+
+        // Fallback to procedural texture
+        Texture fallback = switch (type) {
+            case "sandstone", "ancient_stone", "pyramid_stone" -> DesertTextures.desertRock(64, 64, random.nextLong());
+            case "cactus", "palm_frond" -> DesertTextures.cactus(32, 64, random.nextLong());
+            case "palm_bark", "dead_wood" -> DesertTextures.crackedEarth(32, 32, random.nextLong());
+            case "bone" -> DesertTextures.crackedEarth(32, 32, random.nextLong());
+            default -> DesertTextures.desertRock(64, 64, random.nextLong());
+        };
+        textures.add(fallback);
+        return new Material(TextureAttribute.createDiffuse(fallback));
     }
 
     public Model generate(DesertFeature feature, float scale, long featureSeed) {
@@ -67,9 +152,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateRockSpire(float scale) {
-        Texture tex = DesertTextures.desertRock(64, 64, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("sandstone");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("spire", GL20.GL_TRIANGLES,
@@ -125,9 +208,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateRockArch(float scale) {
-        Texture tex = DesertTextures.desertRock(64, 64, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("sandstone");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("arch", GL20.GL_TRIANGLES,
@@ -181,9 +262,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateBoulderCluster(float scale) {
-        Texture tex = DesertTextures.desertRock(64, 64, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("sandstone");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("boulders", GL20.GL_TRIANGLES,
@@ -203,9 +282,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateTallCactus(float scale) {
-        Texture tex = DesertTextures.cactus(32, 64, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("cactus");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("cactus", GL20.GL_TRIANGLES,
@@ -248,9 +325,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateRoundCactus(float scale) {
-        Texture tex = DesertTextures.cactus(32, 32, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("cactus");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("cactus", GL20.GL_TRIANGLES,
@@ -265,9 +340,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateDeadTree(float scale) {
-        Texture tex = DesertTextures.crackedEarth(32, 32, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("dead_wood");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("tree", GL20.GL_TRIANGLES,
@@ -300,9 +373,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateSandDune(float scale) {
-        Texture tex = DesertTextures.sandDunes(64, 64, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("sandstone");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("dune", GL20.GL_TRIANGLES,
@@ -352,15 +423,8 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generatePalmTree(float scale) {
-        // Trunk texture
-        Texture trunkTex = DesertTextures.crackedEarth(32, 64, random.nextLong());
-        textures.add(trunkTex);
-        Material trunkMat = new Material(TextureAttribute.createDiffuse(trunkTex));
-
-        // Frond texture (reuse cactus green)
-        Texture frondTex = DesertTextures.cactus(64, 32, random.nextLong());
-        textures.add(frondTex);
-        Material frondMat = new Material(TextureAttribute.createDiffuse(frondTex));
+        Material trunkMat = getMaterial("palm_bark");
+        Material frondMat = getMaterial("palm_frond");
 
         modelBuilder.begin();
 
@@ -390,9 +454,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateAlienSkull(float scale) {
-        Texture tex = DesertTextures.crackedEarth(32, 32, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("bone");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("skull", GL20.GL_TRIANGLES,
@@ -411,9 +473,7 @@ public class DesertFeatureGenerator implements Disposable {
     }
 
     private Model generateAncientPillar(float scale) {
-        Texture tex = DesertTextures.desertRock(64, 64, random.nextLong());
-        textures.add(tex);
-        Material mat = new Material(TextureAttribute.createDiffuse(tex));
+        Material mat = getMaterial("ancient_stone");
 
         modelBuilder.begin();
         MeshPartBuilder builder = modelBuilder.part("pillar", GL20.GL_TRIANGLES,
@@ -702,5 +762,20 @@ public class DesertFeatureGenerator implements Disposable {
         for (Model m : models) m.dispose();
         textures.clear();
         models.clear();
+    }
+
+    /**
+     * Dispose shared file-based textures (call on game shutdown)
+     */
+    public static void disposeSharedTextures() {
+        if (sandstoneTexture != null) { sandstoneTexture.dispose(); sandstoneTexture = null; }
+        if (cactusTexture != null) { cactusTexture.dispose(); cactusTexture = null; }
+        if (palmBarkTexture != null) { palmBarkTexture.dispose(); palmBarkTexture = null; }
+        if (palmFrondTexture != null) { palmFrondTexture.dispose(); palmFrondTexture = null; }
+        if (deadWoodTexture != null) { deadWoodTexture.dispose(); deadWoodTexture = null; }
+        if (boneTexture != null) { boneTexture.dispose(); boneTexture = null; }
+        if (ancientStoneTexture != null) { ancientStoneTexture.dispose(); ancientStoneTexture = null; }
+        if (pyramidStoneTexture != null) { pyramidStoneTexture.dispose(); pyramidStoneTexture = null; }
+        fileTexturesLoaded = false;
     }
 }
