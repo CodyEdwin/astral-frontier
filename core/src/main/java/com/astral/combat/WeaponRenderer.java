@@ -70,8 +70,8 @@ public class WeaponRenderer {
         // Recoil - gun kicks back toward player
         float recoilAmt = weaponRecoil * 12f * (1f - aimTransition * 0.5f);
 
-        // Hip fire position (lower, slightly right)
-        float hipX = width * 0.55f;
+        // Hip fire position (lower, positioned to the right)
+        float hipX = width * 0.68f;
         float hipY = height * -0.15f;
 
         // ADS position (centered, raised up to current level)
@@ -82,8 +82,8 @@ public class WeaponRenderer {
         float baseY = MathUtils.lerp(hipY, adsY, aimTransition) + bobY - recoilAmt;
 
         // Calculate tilt toward crosshair (center of screen) when hip-firing
-        // Tilt decreases as we aim down sights
-        float tiltAmount = (1f - aimTransition) * 0.15f;  // Positive to tilt toward center
+        // Negative rotation = clockwise = barrel points left toward center
+        float tiltAmount = (1f - aimTransition) * -0.25f;
 
         // Weapon switch animation - slide down
         baseY -= (1f - switchProgress) * height * 0.4f;
