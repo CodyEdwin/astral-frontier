@@ -1,0 +1,90 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# Android
+android/build/
+android/libs/
+android/.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+local.properties
+
+# Desktop
+desktop/build/
+
+# Server
+server/build/
+
+# Core
+core/build/
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IDE - VS Code
+.vscode/
+
+# IDE - NetBeans
+nbproject/
+nbbuild/
+nbdist/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Native libraries (generated)
+*.so
+*.dll
+*.dylib
+
+# Compiled files
+*.class
+
+# Test output
+test-output/
+
+# Gradle wrapper (optional - uncomment to include)
+# !gradle/wrapper/gradle-wrapper.jar
+# !gradlew
+# !gradlew.bat
+
+# File share tools (not part of game)
+/file-share/
+
+# Android SDK download
+/android-sdk/
+/commandlinetools.zip

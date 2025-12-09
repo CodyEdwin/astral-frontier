@@ -1,0 +1,157 @@
+{
+  "quests": [
+    {
+      "id": "tutorial_first_flight",
+      "name": "First Flight",
+      "description": "Learn the basics of piloting your ship.",
+      "type": "MAIN",
+      "objectives": [
+        {
+          "id": "obj_throttle",
+          "description": "Use throttle to accelerate",
+          "type": "VISIT_LOCATION",
+          "target": "tutorial_checkpoint_1",
+          "count": 1
+        },
+        {
+          "id": "obj_maneuver",
+          "description": "Practice maneuvering your ship",
+          "type": "VISIT_LOCATION",
+          "target": "tutorial_checkpoint_2",
+          "count": 1
+        },
+        {
+          "id": "obj_dock",
+          "description": "Return to the station",
+          "type": "VISIT_LOCATION",
+          "target": "starting_station",
+          "count": 1
+        }
+      ],
+      "rewards": [
+        { "type": "CREDITS", "amount": 500 },
+        { "type": "EXPERIENCE", "amount": 100 }
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "main_void_gate",
+      "name": "The Void Gate",
+      "description": "Investigate reports of a mysterious ancient structure on the edge of the sector.",
+      "type": "MAIN",
+      "objectives": [
+        {
+          "id": "obj_talk_merchant",
+          "description": "Speak with Zara the Trader about the Void Gate",
+          "type": "TALK_TO_NPC",
+          "target": "npc_merchant_zara",
+          "count": 1
+        },
+        {
+          "id": "obj_find_beacon",
+          "description": "Locate the old nav beacon in the Kessler Belt",
+          "type": "VISIT_LOCATION",
+          "target": "kessler_belt_beacon",
+          "count": 1
+        },
+        {
+          "id": "obj_scan_gate",
+          "description": "Scan the Void Gate structure",
+          "type": "SCAN_OBJECT",
+          "target": "void_gate",
+          "count": 1
+        }
+      ],
+      "rewards": [
+        { "type": "CREDITS", "amount": 5000 },
+        { "type": "EXPERIENCE", "amount": 1000 },
+        { "type": "ITEM", "value": "nav_data_chip", "amount": 1 }
+      ],
+      "prerequisites": ["tutorial_first_flight"]
+    },
+    {
+      "id": "side_mining_contract",
+      "name": "Mining Contract",
+      "description": "The mining guild needs iron ore delivered to their station.",
+      "type": "SIDE",
+      "objectives": [
+        {
+          "id": "obj_collect_ore",
+          "description": "Collect iron ore",
+          "type": "COLLECT_ITEM",
+          "target": "iron_ore",
+          "count": 50
+        },
+        {
+          "id": "obj_deliver_ore",
+          "description": "Deliver the ore to Mining Station Alpha",
+          "type": "DELIVER_ITEM",
+          "target": "mining_station_alpha",
+          "count": 1
+        }
+      ],
+      "rewards": [
+        { "type": "CREDITS", "amount": 2000 },
+        { "type": "EXPERIENCE", "amount": 250 },
+        { "type": "REPUTATION", "value": "mining_guild", "amount": 50 }
+      ],
+      "prerequisites": []
+    },
+    {
+      "id": "bounty_pirate_captain",
+      "name": "Wanted: Pirate Captain Vex",
+      "description": "A bounty has been placed on the notorious pirate captain Vex.",
+      "type": "BOUNTY",
+      "objectives": [
+        {
+          "id": "obj_find_vex",
+          "description": "Locate Captain Vex's hideout",
+          "type": "VISIT_LOCATION",
+          "target": "pirate_hideout_vex",
+          "count": 1
+        },
+        {
+          "id": "obj_kill_vex",
+          "description": "Eliminate Captain Vex",
+          "type": "KILL_ENEMY",
+          "target": "pirate_captain_vex",
+          "count": 1
+        }
+      ],
+      "rewards": [
+        { "type": "CREDITS", "amount": 10000 },
+        { "type": "EXPERIENCE", "amount": 500 },
+        { "type": "REPUTATION", "value": "security_forces", "amount": 100 }
+      ],
+      "prerequisites": ["tutorial_first_flight"]
+    },
+    {
+      "id": "exploration_new_system",
+      "name": "Uncharted Territory",
+      "description": "The Exploration Guild is offering rewards for surveying unexplored systems.",
+      "type": "EXPLORATION",
+      "objectives": [
+        {
+          "id": "obj_discover_systems",
+          "description": "Discover new star systems",
+          "type": "VISIT_LOCATION",
+          "target": "undiscovered_system",
+          "count": 3
+        },
+        {
+          "id": "obj_scan_planets",
+          "description": "Scan planets for resources",
+          "type": "SCAN_OBJECT",
+          "target": "any_planet",
+          "count": 5
+        }
+      ],
+      "rewards": [
+        { "type": "CREDITS", "amount": 3000 },
+        { "type": "EXPERIENCE", "amount": 400 },
+        { "type": "REPUTATION", "value": "exploration_guild", "amount": 75 }
+      ],
+      "prerequisites": []
+    }
+  ]
+}

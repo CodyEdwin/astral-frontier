@@ -1,0 +1,123 @@
+{
+  "ships": [
+    {
+      "id": "fighter_vanguard",
+      "name": "Vanguard-class Fighter",
+      "class": "FIGHTER",
+      "description": "A nimble interceptor favored by military pilots.",
+      "stats": {
+        "hull": 500,
+        "shield": 300,
+        "shieldRegenRate": 15,
+        "mass": 8000,
+        "cargoCapacity": 20
+      },
+      "propulsion": {
+        "mainThrust": 400000,
+        "maneuverThrust": 120000,
+        "boostMultiplier": 2.5,
+        "maxSpeed": 800,
+        "fuelCapacity": 500,
+        "fuelConsumption": 0.5
+      },
+      "handling": {
+        "pitchRate": 2.0,
+        "yawRate": 1.8,
+        "rollRate": 2.5,
+        "linearDamping": 0.15,
+        "angularDamping": 0.9
+      },
+      "hardpoints": [
+        { "id": "nose_left", "type": "SMALL_WEAPON", "position": [-1.2, 0, -5] },
+        { "id": "nose_right", "type": "SMALL_WEAPON", "position": [1.2, 0, -5] },
+        { "id": "wing_left", "type": "MISSILE", "position": [-3, -0.5, -2] },
+        { "id": "wing_right", "type": "MISSILE", "position": [3, -0.5, -2] }
+      ],
+      "moduleSlots": [
+        { "id": "engine", "type": "ENGINE", "size": "MEDIUM" },
+        { "id": "reactor", "type": "REACTOR", "size": "SMALL" },
+        { "id": "shield_gen", "type": "SHIELD", "size": "SMALL" },
+        { "id": "utility_1", "type": "UTILITY", "size": "SMALL" }
+      ]
+    },
+    {
+      "id": "freighter_hauler",
+      "name": "Hauler-class Freighter",
+      "class": "FREIGHTER",
+      "description": "A reliable cargo vessel for long-haul trade routes.",
+      "stats": {
+        "hull": 1500,
+        "shield": 500,
+        "shieldRegenRate": 10,
+        "mass": 50000,
+        "cargoCapacity": 200
+      },
+      "propulsion": {
+        "mainThrust": 800000,
+        "maneuverThrust": 200000,
+        "boostMultiplier": 1.5,
+        "maxSpeed": 400,
+        "fuelCapacity": 2000,
+        "fuelConsumption": 1.5
+      },
+      "handling": {
+        "pitchRate": 0.8,
+        "yawRate": 0.6,
+        "rollRate": 1.0,
+        "linearDamping": 0.2,
+        "angularDamping": 0.95
+      },
+      "hardpoints": [
+        { "id": "turret_top", "type": "TURRET", "position": [0, 3, 0] },
+        { "id": "turret_bottom", "type": "TURRET", "position": [0, -2, 0] }
+      ],
+      "moduleSlots": [
+        { "id": "engine", "type": "ENGINE", "size": "LARGE" },
+        { "id": "reactor", "type": "REACTOR", "size": "MEDIUM" },
+        { "id": "shield_gen", "type": "SHIELD", "size": "MEDIUM" },
+        { "id": "cargo_1", "type": "CARGO", "size": "LARGE" },
+        { "id": "cargo_2", "type": "CARGO", "size": "LARGE" }
+      ]
+    },
+    {
+      "id": "explorer_pathfinder",
+      "name": "Pathfinder-class Explorer",
+      "class": "EXPLORER",
+      "description": "An advanced exploration vessel with extended range and scanning capabilities.",
+      "stats": {
+        "hull": 800,
+        "shield": 600,
+        "shieldRegenRate": 20,
+        "mass": 15000,
+        "cargoCapacity": 50
+      },
+      "propulsion": {
+        "mainThrust": 500000,
+        "maneuverThrust": 180000,
+        "boostMultiplier": 2.0,
+        "maxSpeed": 600,
+        "fuelCapacity": 1000,
+        "fuelConsumption": 0.3
+      },
+      "handling": {
+        "pitchRate": 1.5,
+        "yawRate": 1.3,
+        "rollRate": 2.0,
+        "linearDamping": 0.12,
+        "angularDamping": 0.85
+      },
+      "hardpoints": [
+        { "id": "nose", "type": "MEDIUM_WEAPON", "position": [0, 0, -8] },
+        { "id": "scanner", "type": "UTILITY", "position": [0, 1, -5] }
+      ],
+      "moduleSlots": [
+        { "id": "engine", "type": "ENGINE", "size": "MEDIUM" },
+        { "id": "reactor", "type": "REACTOR", "size": "MEDIUM" },
+        { "id": "shield_gen", "type": "SHIELD", "size": "SMALL" },
+        { "id": "scanner", "type": "SCANNER", "size": "LARGE" },
+        { "id": "utility_1", "type": "UTILITY", "size": "SMALL" },
+        { "id": "utility_2", "type": "UTILITY", "size": "SMALL" }
+      ]
+    }
+  ]
+}

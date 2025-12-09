@@ -1,0 +1,100 @@
+{
+  "weapons": [
+    {
+      "id": "laser_mk1",
+      "name": "Laser Cannon Mk.I",
+      "type": "LASER",
+      "damage": 25,
+      "damageType": "energy",
+      "fireRate": 4.0,
+      "projectileSpeed": 2000,
+      "range": 3000,
+      "spread": 0.5,
+      "energyCost": 10,
+      "heatGenerated": 15,
+      "effects": ["PIERCE_SHIELDS_10"]
+    },
+    {
+      "id": "laser_mk2",
+      "name": "Laser Cannon Mk.II",
+      "type": "LASER",
+      "damage": 40,
+      "damageType": "energy",
+      "fireRate": 3.5,
+      "projectileSpeed": 2200,
+      "range": 3500,
+      "spread": 0.4,
+      "energyCost": 15,
+      "heatGenerated": 20,
+      "effects": ["PIERCE_SHIELDS_15"]
+    },
+    {
+      "id": "railgun_mk1",
+      "name": "Railgun Mk.I",
+      "type": "RAILGUN",
+      "damage": 150,
+      "damageType": "kinetic",
+      "fireRate": 0.5,
+      "projectileSpeed": 5000,
+      "range": 8000,
+      "spread": 0.1,
+      "ammoCost": 1,
+      "heatGenerated": 50,
+      "effects": ["ARMOR_PIERCE_25"]
+    },
+    {
+      "id": "plasma_cannon",
+      "name": "Plasma Cannon",
+      "type": "PLASMA",
+      "damage": 80,
+      "damageType": "plasma",
+      "fireRate": 1.5,
+      "projectileSpeed": 1500,
+      "range": 2500,
+      "spread": 1.0,
+      "energyCost": 25,
+      "heatGenerated": 35,
+      "effects": ["SHIELD_DAMAGE_BONUS_50"]
+    },
+    {
+      "id": "missile_seeker",
+      "name": "Seeker Missile",
+      "type": "MISSILE",
+      "damage": 200,
+      "damageType": "explosive",
+      "fireRate": 0.3,
+      "projectileSpeed": 500,
+      "range": 10000,
+      "tracking": true,
+      "lockOnTime": 2.0,
+      "ammoCost": 1,
+      "effects": ["EXPLOSIVE_RADIUS_20"]
+    },
+    {
+      "id": "torpedo_heavy",
+      "name": "Heavy Torpedo",
+      "type": "TORPEDO",
+      "damage": 500,
+      "damageType": "explosive",
+      "fireRate": 0.1,
+      "projectileSpeed": 300,
+      "range": 15000,
+      "tracking": true,
+      "lockOnTime": 4.0,
+      "ammoCost": 1,
+      "effects": ["EXPLOSIVE_RADIUS_50", "ARMOR_PIERCE_50"]
+    },
+    {
+      "id": "beam_mining",
+      "name": "Mining Beam",
+      "type": "BEAM",
+      "damage": 10,
+      "damageType": "thermal",
+      "fireRate": 0,
+      "range": 500,
+      "energyCost": 5,
+      "heatGenerated": 5,
+      "effects": ["MINING_BONUS_100"]
+    }
+  ]
+}
