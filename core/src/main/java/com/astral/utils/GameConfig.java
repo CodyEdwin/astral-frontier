@@ -32,6 +32,9 @@ public class GameConfig {
     public boolean autosave = true;
     public int autosaveInterval = 300; // seconds
 
+    // World generation
+    public long worldSeed = System.currentTimeMillis(); // Random seed by default
+
     // Network
     public String playerName = "Pilot";
     public int serverPort = 54555;
@@ -53,5 +56,13 @@ public class GameConfig {
 
     public void save() {
         // TODO: Save to JSON config file
+    }
+
+    public long getWorldSeed() {
+        return worldSeed;
+    }
+
+    public void setWorldSeed(long seed) {
+        this.worldSeed = seed;
     }
 }

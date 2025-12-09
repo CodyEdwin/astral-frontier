@@ -8,6 +8,7 @@ import com.astral.screens.LoadingScreen;
 import com.astral.screens.MenuScreen;
 import com.astral.screens.PlanetExplorationScreen;
 import com.astral.procedural.PlanetType;
+import com.astral.procedural.ProceduralAssetManager;
 import com.astral.systems.*;
 import com.astral.ecs.World;
 import com.astral.utils.GameConfig;
@@ -41,6 +42,9 @@ public class AstralFrontier extends Game {
     private GameConfig config;
     private boolean initialized = false;
 
+    // Procedural assets
+    private ProceduralAssetManager proceduralAssets;
+
     public static AstralFrontier instance;
 
     @Override
@@ -55,6 +59,11 @@ public class AstralFrontier extends Game {
 
         // Initialize ECS world
         ecsWorld = new World();
+
+        // Initialize procedural asset manager with world seed
+        long worldSeed = config.getWorldSeed();
+        proceduralAssets = new ProceduralAssetManager(worldSeed);
+        Gdx.app.log("AstralFrontier", "Procedural asset manager initialized with seed: " + worldSeed);
 
         // Initialize core systems
         initializeSystems();
@@ -141,6 +150,10 @@ public class AstralFrontier extends Game {
             audioSystem.dispose();
         }
 
+        if (proceduralAssets != null) {
+            proceduralAssets.dispose();
+        }
+
         Gdx.app.log("AstralFrontier", "Shutdown complete.");
     }
 
@@ -153,6 +166,7 @@ public class AstralFrontier extends Game {
     public AudioSystem getAudioSystem() { return audioSystem; }
     public GameConfig getConfig() { return config; }
     public GameLogicSystem getGameLogicSystem() { return gameLogicSystem; }
+    public ProceduralAssetManager getProceduralAssets() { return proceduralAssets; }
 
     public void showMainMenu() {
         setScreen(new MenuScreen(this));
