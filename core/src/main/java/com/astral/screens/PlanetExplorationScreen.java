@@ -116,9 +116,12 @@ public class PlanetExplorationScreen implements Screen {
     private float normalFOV = 75f;
     private float aimFOV = 45f;
 
-    // Weapon sounds
-    private Sound automaticWeaponSound;
-    private Sound pistolShotSound;
+    // Weapon sounds - one for each weapon type
+    private Sound plasmaRifleSound;
+    private Sound laserPistolSound;
+    private Sound scatterGunSound;
+    private Sound railCannonSound;
+    private Sound pulseSMGSound;
 
     // Hitmarker
     private float hitmarkerTimer = 0f;
@@ -177,19 +180,12 @@ public class PlanetExplorationScreen implements Screen {
         currentWeapon = WeaponType.PLASMA_RIFLE;
         currentWeaponIndex = 0;
 
-        // Load weapon sounds
-        try {
-            automaticWeaponSound = Gdx.audio.newSound(Gdx.files.internal("audio/automatic-weapon.mp3"));
-            Gdx.app.log("Audio", "Loaded automatic-weapon.mp3");
-        } catch (Exception e) {
-            Gdx.app.error("Audio", "Failed to load automatic-weapon.mp3: " + e.getMessage());
-        }
-        try {
-            pistolShotSound = Gdx.audio.newSound(Gdx.files.internal("audio/pistol-shot.mp3"));
-            Gdx.app.log("Audio", "Loaded pistol-shot.mp3");
-        } catch (Exception e) {
-            Gdx.app.error("Audio", "Failed to load pistol-shot.mp3: " + e.getMessage());
-        }
+        // Load weapon sounds - each weapon has its own sound
+        plasmaRifleSound = loadSound("audio/laster-rifle.mp3");
+        laserPistolSound = loadSound("audio/pistol-shot.mp3");
+        scatterGunSound = loadSound("audio/shotgun.mp3");
+        railCannonSound = loadSound("audio/rail-gun.mp3");
+        pulseSMGSound = loadSound("audio/smg.mp3");
 
         // Initialize bullet hole manager
         bulletHoleManager = new BulletHoleManager();
@@ -529,17 +525,8 @@ public class PlanetExplorationScreen implements Screen {
             weaponAmmo[currentWeaponIndex]--;
             justFired = true;
 
-            // Play weapon sound based on weapon type
-            // Only PULSE_SMG uses automatic sound, all others use pistol shot
-            if (currentWeapon == WeaponType.PULSE_SMG) {
-                if (automaticWeaponSound != null) {
-                    automaticWeaponSound.play(0.5f);  // Lower volume to avoid clipping on rapid fire
-                }
-            } else {
-                if (pistolShotSound != null) {
-                    pistolShotSound.play(0.7f);
-                }
-            }
+            // Play weapon-specific sound
+            playWeaponSound();
 
             // Auto-reload when empty
             if (weaponAmmo[currentWeaponIndex] <= 0 && weaponReserve[currentWeaponIndex] > 0) {
@@ -641,6 +628,33 @@ public class PlanetExplorationScreen implements Screen {
         } else {
             GroundProjectile proj = new GroundProjectile(spawnPos, shootDir, projectileSpeed, currentWeapon.damage);
             projectiles.add(proj);
+        }
+    }
+
+    private Sound loadSound(String path) {
+        try {
+            Sound sound = Gdx.audio.newSound(Gdx.files.internal(path));
+            Gdx.app.log("Audio", "Loaded: " + path);
+            return sound;
+        } catch (Exception e) {
+            Gdx.app.error("Audio", "Failed to load " + path + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    private void playWeaponSound() {
+        Sound sound = switch (currentWeapon) {
+            case PLASMA_RIFLE -> plasmaRifleSound;
+            case LASER_PISTOL -> laserPistolSound;
+            case SCATTER_GUN -> scatterGunSound;
+            case RAIL_CANNON -> railCannonSound;
+            case PULSE_SMG -> pulseSMGSound;
+        };
+
+        if (sound != null) {
+            // Lower volume for rapid-fire weapons
+            float volume = (currentWeapon == WeaponType.PULSE_SMG) ? 0.5f : 0.7f;
+            sound.play(volume);
         }
     }
 
@@ -908,8 +922,11 @@ public class PlanetExplorationScreen implements Screen {
         projectiles.clear();
 
         // Dispose weapon sounds
-        if (automaticWeaponSound != null) automaticWeaponSound.dispose();
-        if (pistolShotSound != null) pistolShotSound.dispose();
+        if (plasmaRifleSound != null) plasmaRifleSound.dispose();
+        if (laserPistolSound != null) laserPistolSound.dispose();
+        if (scatterGunSound != null) scatterGunSound.dispose();
+        if (railCannonSound != null) railCannonSound.dispose();
+        if (pulseSMGSound != null) pulseSMGSound.dispose();
 
         // Dispose bullet hole manager
         if (bulletHoleManager != null) bulletHoleManager.dispose();
