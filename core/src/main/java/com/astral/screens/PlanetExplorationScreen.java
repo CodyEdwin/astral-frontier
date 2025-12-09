@@ -53,8 +53,8 @@ public class PlanetExplorationScreen implements Screen {
     private float jetpackFuel = 100f;
     private float jetpackMaxFuel = 100f;
     private float jetpackThrust = 15f;
-    private float jetpackFuelConsumption = 20f; // per second while thrusting
-    private float jetpackFuelRecharge = 10f;    // per second when grounded
+    private float jetpackFuelConsumption = 2f;  // per second while thrusting (lasts ~50 seconds)
+    private float jetpackFuelRecharge = 15f;    // per second when grounded (fast recharge)
     private float lastSpacePress = 0f;
     private float doubleTapThreshold = 0.3f;    // seconds
     private boolean spaceWasPressed = false;

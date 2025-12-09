@@ -268,18 +268,18 @@ public class TerrainChunk implements Disposable {
             default -> new Color(0.7f, 0.6f, 0.5f, 1f);
         };
 
-        // Force full emissive brightness to debug - terrain should glow bright
-        System.out.println("[TerrainChunk] Creating material for " + planetType + " texture=" + (texture != null));
-
         if (texture != null) {
-            // Full emissive = self-lit terrain, ignores lighting completely
+            // Texture with proper desert coloring - use emissive for self-lit appearance
             return new Material(
                 TextureAttribute.createDiffuse(texture),
-                ColorAttribute.createEmissive(new Color(1f, 1f, 1f, 1f))  // FULL WHITE emissive
+                ColorAttribute.createDiffuse(Color.WHITE),
+                ColorAttribute.createEmissive(new Color(baseColor).mul(0.4f))  // Subtle self-illumination
             );
         } else {
+            // Fallback solid color
             return new Material(
-                ColorAttribute.createEmissive(baseColor)  // Full color as emissive
+                ColorAttribute.createDiffuse(baseColor),
+                ColorAttribute.createEmissive(new Color(baseColor).mul(0.3f))
             );
         }
     }
