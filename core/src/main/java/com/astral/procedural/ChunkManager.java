@@ -273,9 +273,14 @@ public class ChunkManager implements Disposable {
 
     private void processMeshBuilds() {
         synchronized (pendingMeshBuild) {
+            if (pendingMeshBuild.size > 0) {
+                Gdx.app.log("ChunkManager", "processMeshBuilds: " + pendingMeshBuild.size + " chunks pending");
+            }
             int built = 0;
             while (pendingMeshBuild.size > 0 && built < MAX_LOADS_PER_FRAME) {
                 TerrainChunk chunk = pendingMeshBuild.removeIndex(0);
+                Gdx.app.log("ChunkManager", "Building mesh for chunk " + chunk.chunkX + "," + chunk.chunkZ +
+                    " isLoading=" + chunk.isLoading + " isMeshBuilt=" + chunk.isMeshBuilt());
                 if (!chunk.isLoading && !chunk.isMeshBuilt()) {
                     chunk.buildMesh();
                     loadedCount++;

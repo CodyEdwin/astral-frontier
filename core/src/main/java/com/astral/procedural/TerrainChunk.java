@@ -114,6 +114,9 @@ public class TerrainChunk implements Disposable {
      * Build the mesh from heightmap data - must be called on GL thread
      */
     public void buildMesh() {
+        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "buildMesh called for chunk " + chunkX + "," + chunkZ +
+            " heightmap=" + (heightmap != null) + " meshBuilt=" + meshBuilt);
+
         if (heightmap == null || meshBuilt) return;
 
         // Ensure textures are initialized
