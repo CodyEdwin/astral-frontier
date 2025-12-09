@@ -540,17 +540,17 @@ public class PlanetExplorationScreen implements Screen {
         float bobX = MathUtils.sin(weaponBobTime) * 5f * bobMultiplier;
         float bobY = Math.abs(MathUtils.cos(weaponBobTime * 2f)) * 3f * bobMultiplier;
 
-        // Recoil effect - weapon kicks down when firing
+        // Recoil effect
         float recoilMultiplier = 1f - aimTransition * 0.5f;
-        float recoilY = -weaponRecoil * 30f * recoilMultiplier;
+        float recoilY = -weaponRecoil * 20f * recoilMultiplier;
 
-        // Hip fire position (bottom center-right, gun pointing UP toward crosshair)
-        float hipX = width * 0.55f;
-        float hipY = -height * 0.15f;  // Below screen, barrel extends up
+        // Hip fire position (bottom right, barrel pointing toward center)
+        float hipX = width * 0.7f;
+        float hipY = height * 0.1f;
 
-        // ADS position (centered, sights at screen center)
-        float adsX = width * 0.5f;
-        float adsY = height * 0.1f;
+        // ADS position (more centered)
+        float adsX = width * 0.55f;
+        float adsY = height * 0.25f;
 
         // Interpolate between hip and ADS position
         float baseX = MathUtils.lerp(hipX, adsX, aimTransition) + bobX;
@@ -561,121 +561,119 @@ public class PlanetExplorationScreen implements Screen {
         if (reloading) {
             float reloadProgress = 1f - (reloadTimer / reloadTime);
             float dipAmount = MathUtils.sin(reloadProgress * MathUtils.PI);
-            baseX += dipAmount * 80f;
-            reloadTilt = dipAmount * 25f;
+            baseY -= dipAmount * 50f;
+            reloadTilt = dipAmount * 20f;
         }
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
         // Scale based on screen size
-        float scale = height / 800f;
+        float scale = height / 700f;
 
-        // === HANDS (bottom, holding grip) ===
-        float armAlpha = 1f - aimTransition * 0.5f;
+        // Base weapon angle - tilted so barrel points toward crosshair (top-left direction)
+        // Hip fire: angled, ADS: more level for aiming
+        float baseAngle = MathUtils.lerp(35f, 15f, aimTransition) + reloadTilt;
 
-        // Left hand on foregrip (supporting barrel area)
-        shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);  // Glove
-        drawRotatedRect(baseX - 60 * scale, baseY + 280 * scale, 70 * scale, 40 * scale, 15 + reloadTilt);
+        // === ARM coming from bottom right ===
+        float armAlpha = 1f - aimTransition * 0.3f;
 
-        // Right hand on grip
+        // Upper arm
         if (armAlpha > 0.2f) {
             shapeRenderer.setColor(0.7f * armAlpha, 0.55f * armAlpha, 0.45f * armAlpha, 1f);
-            drawRotatedRect(baseX + 20 * scale, baseY + 80 * scale, 60 * scale, 90 * scale, -10 + reloadTilt);
+            drawRotatedRect(baseX + 50 * scale, baseY - 80 * scale, 120 * scale, 50 * scale, -30);
         }
-        shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);  // Glove on grip
-        drawRotatedRect(baseX - 5 * scale, baseY + 140 * scale, 50 * scale, 50 * scale, -5 + reloadTilt);
 
-        // === GUN BODY (vertical - barrel pointing UP) ===
+        // Forearm
+        shapeRenderer.setColor(0.65f, 0.5f, 0.4f, 1f);
+        drawRotatedRect(baseX - 20 * scale, baseY - 30 * scale, 100 * scale, 45 * scale, -15);
 
-        // Stock (bottom, below hands) - hidden when ADS
-        if (aimTransition < 0.7f) {
+        // Gloved hand on grip
+        shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);
+        drawRotatedRect(baseX - 60 * scale, baseY + 10 * scale, 60 * scale, 40 * scale, baseAngle - 10);
+
+        // === GUN (angled - barrel pointing toward top-left / crosshair) ===
+
+        // Stock (bottom right, behind grip)
+        if (aimTransition < 0.8f) {
             shapeRenderer.setColor(0.22f, 0.22f, 0.25f, 1f);
-            drawRotatedRect(baseX - 30 * scale, baseY, 60 * scale, 100 * scale, reloadTilt);
-            // Stock pad
-            shapeRenderer.setColor(0.18f, 0.18f, 0.2f, 1f);
-            shapeRenderer.rect(baseX - 25 * scale, baseY - 10 * scale, 50 * scale, 20 * scale);
+            drawRotatedRect(baseX + 20 * scale, baseY - 40 * scale, 80 * scale, 40 * scale, baseAngle - 180);
         }
 
-        // Grip (where right hand holds)
+        // Grip
         shapeRenderer.setColor(0.18f, 0.18f, 0.2f, 1f);
-        drawRotatedRect(baseX - 20 * scale, baseY + 100 * scale, 45 * scale, 80 * scale, -8 + reloadTilt);
+        drawRotatedRect(baseX - 40 * scale, baseY - 20 * scale, 35 * scale, 60 * scale, baseAngle - 90);
 
-        // Trigger guard
-        shapeRenderer.setColor(0.25f, 0.25f, 0.28f, 1f);
-        shapeRenderer.rect(baseX - 40 * scale, baseY + 165 * scale, 15 * scale, 40 * scale);
-
-        // Main receiver body (center mass of gun)
+        // Main receiver body
         shapeRenderer.setColor(0.28f, 0.28f, 0.3f, 1f);
-        drawRotatedRect(baseX - 35 * scale, baseY + 180 * scale, 70 * scale, 150 * scale, reloadTilt);
+        drawRotatedRect(baseX - 30 * scale, baseY + 30 * scale, 55 * scale, 180 * scale, baseAngle);
 
-        // Magazine (sticks out to the left)
+        // Magazine (sticking down from receiver)
         shapeRenderer.setColor(0.22f, 0.22f, 0.25f, 1f);
-        drawRotatedRect(baseX - 70 * scale, baseY + 200 * scale, 40 * scale, 80 * scale, 10 + reloadTilt);
+        drawRotatedRect(baseX - 10 * scale, baseY - 10 * scale, 30 * scale, 70 * scale, baseAngle - 100);
 
         // Energy cell glow in magazine
         float cellGlow = (ammo / (float) maxAmmo) * 0.8f + 0.2f;
         shapeRenderer.setColor(0.05f * cellGlow, 0.4f * cellGlow, 0.7f * cellGlow, 1f);
-        shapeRenderer.rect(baseX - 65 * scale, baseY + 210 * scale, 30 * scale, 60 * scale);
+        drawRotatedRect(baseX - 5 * scale, baseY - 5 * scale, 20 * scale, 55 * scale, baseAngle - 100);
 
-        // Upper receiver / rail (top of receiver going toward barrel)
+        // Upper receiver / rail
         shapeRenderer.setColor(0.32f, 0.32f, 0.35f, 1f);
-        drawRotatedRect(baseX - 30 * scale, baseY + 320 * scale, 60 * scale, 120 * scale, reloadTilt);
+        drawRotatedRect(baseX - 50 * scale, baseY + 60 * scale, 50 * scale, 140 * scale, baseAngle);
 
         // Barrel shroud / handguard
         shapeRenderer.setColor(0.3f, 0.3f, 0.33f, 1f);
-        drawRotatedRect(baseX - 25 * scale, baseY + 430 * scale, 50 * scale, 150 * scale, reloadTilt);
+        drawRotatedRect(baseX - 120 * scale, baseY + 100 * scale, 45 * scale, 180 * scale, baseAngle);
 
-        // Cooling vents on handguard
-        shapeRenderer.setColor(0.15f, 0.15f, 0.18f, 1f);
-        for (int i = 0; i < 5; i++) {
-            shapeRenderer.rect(baseX - 20 * scale, baseY + (450 + i * 25) * scale, 40 * scale, 8 * scale);
-        }
+        // Left hand on handguard (supporting)
+        shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);
+        drawRotatedRect(baseX - 150 * scale, baseY + 130 * scale, 55 * scale, 35 * scale, baseAngle + 10);
 
-        // Barrel (extending up toward crosshair)
+        // Barrel (extending toward crosshair)
         shapeRenderer.setColor(0.38f, 0.38f, 0.4f, 1f);
-        drawRotatedRect(baseX - 15 * scale, baseY + 570 * scale, 30 * scale, 120 * scale, reloadTilt);
+        drawRotatedRect(baseX - 220 * scale, baseY + 140 * scale, 25 * scale, 150 * scale, baseAngle);
 
-        // Muzzle / plasma emitter (at top, near crosshair)
+        // Calculate muzzle position (end of barrel, toward crosshair)
+        float barrelAngleRad = baseAngle * MathUtils.degreesToRadians;
+        float muzzleX = baseX - 300 * scale * MathUtils.cos(barrelAngleRad) + 160 * scale * MathUtils.sin(barrelAngleRad);
+        float muzzleY = baseY + 300 * scale * MathUtils.sin(barrelAngleRad) + 160 * scale * MathUtils.cos(barrelAngleRad);
+
+        // Muzzle / plasma emitter (glowing)
         float glowPulse = 0.7f + 0.3f * MathUtils.sin(weaponBobTime * 3f);
         shapeRenderer.setColor(0.1f * glowPulse, 0.6f * glowPulse, 0.9f * glowPulse, 1f);
-        shapeRenderer.circle(baseX, baseY + 700 * scale, 18 * scale);
+        shapeRenderer.circle(muzzleX, muzzleY, 15 * scale);
 
         // Muzzle flash when firing
         if (weaponRecoil > 0.5f) {
+            float flashX = muzzleX - 20 * scale * MathUtils.cos(barrelAngleRad);
+            float flashY = muzzleY + 20 * scale * MathUtils.sin(barrelAngleRad);
             shapeRenderer.setColor(0.3f, 0.8f, 1f, weaponRecoil);
-            shapeRenderer.circle(baseX, baseY + 720 * scale, 30 * scale * weaponRecoil);
+            shapeRenderer.circle(flashX, flashY, 25 * scale * weaponRecoil);
             shapeRenderer.setColor(0.6f, 0.9f, 1f, weaponRecoil * 0.7f);
-            shapeRenderer.circle(baseX, baseY + 740 * scale, 20 * scale * weaponRecoil);
+            shapeRenderer.circle(flashX, flashY, 15 * scale * weaponRecoil);
         }
 
         // === IRON SIGHTS ===
-        // Front sight post (on barrel, closer to muzzle)
+        // Front sight (near muzzle)
+        float frontSightX = muzzleX + 40 * scale * MathUtils.cos(barrelAngleRad);
+        float frontSightY = muzzleY - 40 * scale * MathUtils.sin(barrelAngleRad);
         shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);
-        shapeRenderer.rect(baseX - 4 * scale, baseY + 620 * scale, 8 * scale, 35 * scale);
+        drawRotatedRect(frontSightX, frontSightY, 6 * scale, 25 * scale, baseAngle + 90);
 
         // Front sight glow dot
         float sightGlow = 0.8f + 0.2f * MathUtils.sin(weaponBobTime * 2f);
         shapeRenderer.setColor(0.1f * sightGlow, 0.9f * sightGlow, 0.3f * sightGlow, 1f);
-        shapeRenderer.circle(baseX, baseY + 650 * scale, 4 * scale);
+        shapeRenderer.circle(frontSightX - 10 * scale * MathUtils.cos(barrelAngleRad),
+                            frontSightY + 10 * scale * MathUtils.sin(barrelAngleRad), 3 * scale);
 
-        // Rear sight (on receiver, closer to player - appears larger)
+        // Rear sight (on receiver)
+        float rearSightX = baseX - 70 * scale * MathUtils.cos(barrelAngleRad);
+        float rearSightY = baseY + 70 * scale * MathUtils.sin(barrelAngleRad) + 50 * scale;
         shapeRenderer.setColor(0.15f, 0.15f, 0.18f, 1f);
-        shapeRenderer.rect(baseX - 35 * scale, baseY + 360 * scale, 12 * scale, 50 * scale);  // Left post
-        shapeRenderer.rect(baseX + 23 * scale, baseY + 360 * scale, 12 * scale, 50 * scale);  // Right post
-        shapeRenderer.rect(baseX - 35 * scale, baseY + 405 * scale, 70 * scale, 8 * scale);   // Top bar
+        drawRotatedRect(rearSightX - 25 * scale, rearSightY, 10 * scale, 30 * scale, baseAngle + 90);
+        drawRotatedRect(rearSightX + 15 * scale, rearSightY, 10 * scale, 30 * scale, baseAngle + 90);
 
-        // Rear sight aperture (notch in center)
-        shapeRenderer.setColor(0.08f, 0.08f, 0.1f, 1f);
-        shapeRenderer.rect(baseX - 20 * scale, baseY + 360 * scale, 40 * scale, 45 * scale);
-
-        // When ADS, highlight sight alignment
-        if (aimTransition > 0.8f) {
-            shapeRenderer.setColor(0.0f, 0.6f, 0.2f, 0.2f * aimTransition);
-            shapeRenderer.circle(baseX, baseY + 380 * scale, 15 * scale);
-        }
-
-        // Ammo indicator LEDs on receiver side
-        if (aimTransition < 0.6f) {
+        // Ammo indicator LEDs
+        if (aimTransition < 0.7f) {
             int lightsOn = (int) ((ammo / (float) maxAmmo) * 5);
             for (int i = 0; i < 5; i++) {
                 if (i < lightsOn) {
@@ -683,7 +681,9 @@ public class PlanetExplorationScreen implements Screen {
                 } else {
                     shapeRenderer.setColor(0.1f, 0.1f, 0.1f, 1f);
                 }
-                shapeRenderer.rect(baseX + 40 * scale, baseY + (250 + i * 18) * scale, 8 * scale, 12 * scale);
+                float ledX = baseX - 20 * scale + i * 12 * scale;
+                float ledY = baseY + 65 * scale;
+                shapeRenderer.rect(ledX, ledY, 8 * scale, 6 * scale);
             }
         }
 
