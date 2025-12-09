@@ -72,7 +72,7 @@ public class TerrainChunk implements Disposable {
     public static void initializeTextures(long seed) {
         if (texturesInitialized) return;
 
-        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Initializing terrain textures with seed: " + seed);
+        System.out.println("[TerrainChunk] Initializing terrain textures with seed: " + seed);
 
         desertTexture = DesertTextures.sand(256, 256, seed);
         desertRockTexture = DesertTextures.desertRock(256, 256, seed + 1000);
@@ -82,7 +82,7 @@ public class TerrainChunk implements Disposable {
         rockyTexture = ProceduralTexture.rock(256, 256, new Color(0.5f, 0.45f, 0.4f, 1f), seed);
         oceanTexture = ProceduralTexture.rock(256, 256, new Color(0.9f, 0.85f, 0.7f, 1f), seed);
 
-        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Desert texture: " + (desertTexture != null ? "OK" : "NULL"));
+        System.out.println("[TerrainChunk] Desert texture: " + (desertTexture != null ? "OK" : "NULL"));
 
         desertFeatureGenerator = new DesertFeatureGenerator(seed);
         texturesInitialized = true;
@@ -114,7 +114,7 @@ public class TerrainChunk implements Disposable {
      * Build the mesh from heightmap data - must be called on GL thread
      */
     public void buildMesh() {
-        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "buildMesh called for chunk " + chunkX + "," + chunkZ +
+        System.out.println("[TerrainChunk] buildMesh called for chunk " + chunkX + "," + chunkZ +
             " heightmap=" + (heightmap != null) + " meshBuilt=" + meshBuilt);
 
         if (heightmap == null || meshBuilt) return;
@@ -269,7 +269,7 @@ public class TerrainChunk implements Disposable {
         };
 
         // Force full emissive brightness to debug - terrain should glow bright
-        com.badlogic.gdx.Gdx.app.log("TerrainChunk", "Creating material for " + planetType + " texture=" + (texture != null));
+        System.out.println("[TerrainChunk] Creating material for " + planetType + " texture=" + (texture != null));
 
         if (texture != null) {
             // Full emissive = self-lit terrain, ignores lighting completely
