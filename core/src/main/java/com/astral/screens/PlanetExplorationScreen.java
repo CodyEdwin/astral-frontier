@@ -90,6 +90,21 @@ public class PlanetExplorationScreen implements Screen {
     private float enemySpawnTimer = 0f;
     private float enemySpawnInterval = 5f;
 
+    // Weapon state
+    private boolean weaponEquipped = true;
+    private int ammo = 30;
+    private int maxAmmo = 30;
+    private int reserveAmmo = 120;
+    private boolean reloading = false;
+    private float reloadTime = 1.5f;
+    private float reloadTimer = 0f;
+    private float weaponBobTime = 0f;
+    private float weaponRecoil = 0f;
+
+    // Damage effect
+    private float damageFlashTime = 0f;
+    private float lastHealth = 100f;
+
     public PlanetExplorationScreen(AstralFrontier game, long planetSeed, PlanetType planetType, String planetName) {
         this.game = game;
 
@@ -352,13 +367,63 @@ public class PlanetExplorationScreen implements Screen {
     }
 
     private void updateCombat(float delta) {
+        // Damage flash effect
+        damageFlashTime = Math.max(0, damageFlashTime - delta * 3f);
+        if (playerHealth < lastHealth) {
+            damageFlashTime = 1f;
+        }
+        lastHealth = playerHealth;
+
+        // Weapon bob animation
+        if (playerVelocity.len2() > 0.5f && isGrounded) {
+            weaponBobTime += delta * 10f;
+        }
+        weaponRecoil = Math.max(0, weaponRecoil - delta * 15f);
+
+        // Equip/unequip weapon
+        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+            weaponEquipped = !weaponEquipped;
+            if (weaponEquipped) {
+                Gdx.app.log("Weapon", "Equipped");
+            } else {
+                Gdx.app.log("Weapon", "Holstered");
+            }
+        }
+
+        // Reload
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R) && !reloading && ammo < maxAmmo && reserveAmmo > 0 && weaponEquipped) {
+            reloading = true;
+            reloadTimer = reloadTime;
+            Gdx.app.log("Weapon", "Reloading...");
+        }
+
+        if (reloading) {
+            reloadTimer -= delta;
+            if (reloadTimer <= 0) {
+                int ammoNeeded = maxAmmo - ammo;
+                int ammoToLoad = Math.min(ammoNeeded, reserveAmmo);
+                ammo += ammoToLoad;
+                reserveAmmo -= ammoToLoad;
+                reloading = false;
+                Gdx.app.log("Weapon", "Reloaded!");
+            }
+        }
+
         // Weapon cooldown
         weaponCooldown = Math.max(0, weaponCooldown - delta);
 
         // Fire weapon on left click
-        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && weaponCooldown <= 0) {
+        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && weaponCooldown <= 0 && weaponEquipped && !reloading && ammo > 0) {
             fireWeapon();
             weaponCooldown = weaponFireRate;
+            ammo--;
+            weaponRecoil = 1f;
+
+            // Auto-reload when empty
+            if (ammo <= 0 && reserveAmmo > 0) {
+                reloading = true;
+                reloadTimer = reloadTime;
+            }
         }
 
         // Spawn enemies periodically
@@ -446,14 +511,111 @@ public class PlanetExplorationScreen implements Screen {
         enemies.add(enemy);
     }
 
+    private void renderWeapon() {
+        int width = Gdx.graphics.getWidth();
+        int height = Gdx.graphics.getHeight();
+
+        // Weapon bob effect
+        float bobX = MathUtils.sin(weaponBobTime) * 8f;
+        float bobY = Math.abs(MathUtils.cos(weaponBobTime)) * 6f;
+
+        // Recoil effect
+        float recoilY = weaponRecoil * 30f;
+
+        // Base position (bottom right of screen)
+        float weaponX = width * 0.65f + bobX;
+        float weaponY = height * 0.1f + bobY - recoilY;
+
+        // Reload animation - weapon dips down
+        if (reloading) {
+            float reloadProgress = 1f - (reloadTimer / reloadTime);
+            float dipAmount = MathUtils.sin(reloadProgress * MathUtils.PI) * 80f;
+            weaponY -= dipAmount;
+        }
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        // Gun body (dark gray)
+        shapeRenderer.setColor(0.25f, 0.25f, 0.28f, 1f);
+        shapeRenderer.rect(weaponX, weaponY, 180, 45);
+
+        // Gun barrel (lighter)
+        shapeRenderer.setColor(0.35f, 0.35f, 0.38f, 1f);
+        shapeRenderer.rect(weaponX + 150, weaponY + 15, 80, 20);
+
+        // Barrel tip (plasma glow)
+        shapeRenderer.setColor(0.2f, 0.7f, 0.9f, 1f);
+        shapeRenderer.rect(weaponX + 225, weaponY + 17, 8, 16);
+
+        // Handle
+        shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);
+        shapeRenderer.rect(weaponX + 50, weaponY - 35, 25, 40);
+
+        // Trigger guard
+        shapeRenderer.setColor(0.3f, 0.3f, 0.32f, 1f);
+        shapeRenderer.rect(weaponX + 40, weaponY - 15, 45, 8);
+
+        // Top rail
+        shapeRenderer.setColor(0.4f, 0.4f, 0.42f, 1f);
+        shapeRenderer.rect(weaponX + 30, weaponY + 45, 120, 8);
+
+        // Energy cell (glowing)
+        float glowIntensity = 0.5f + 0.3f * MathUtils.sin(weaponBobTime * 2f);
+        shapeRenderer.setColor(0.1f * glowIntensity, 0.6f * glowIntensity, 0.8f * glowIntensity, 1f);
+        shapeRenderer.rect(weaponX + 80, weaponY + 8, 40, 25);
+
+        // Ammo indicator lights
+        int lightsOn = (int) ((ammo / (float) maxAmmo) * 5);
+        for (int i = 0; i < 5; i++) {
+            if (i < lightsOn) {
+                shapeRenderer.setColor(0.2f, 0.9f, 0.4f, 1f); // Green
+            } else {
+                shapeRenderer.setColor(0.15f, 0.15f, 0.15f, 1f); // Dark
+            }
+            shapeRenderer.rect(weaponX + 10 + i * 12, weaponY + 50, 8, 4);
+        }
+
+        shapeRenderer.end();
+    }
+
     private void renderUI() {
+        int width = Gdx.graphics.getWidth();
+        int height = Gdx.graphics.getHeight();
+
+        // Damage flash effect (red screen overlay)
+        if (damageFlashTime > 0) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(1f, 0f, 0f, damageFlashTime * 0.4f);
+            shapeRenderer.rect(0, 0, width, height);
+            shapeRenderer.end();
+        }
+
+        // Draw weapon (first-person gun view)
+        if (weaponEquipped) {
+            renderWeapon();
+        }
+
         spriteBatch.begin();
 
         // Crosshair
-        int cx = Gdx.graphics.getWidth() / 2;
-        int cy = Gdx.graphics.getHeight() / 2;
+        int cx = width / 2;
+        int cy = height / 2;
         font.setColor(Color.WHITE);
         font.draw(spriteBatch, "+", cx - 5, cy + 8);
+
+        // Ammo display (bottom right)
+        if (weaponEquipped) {
+            font.setColor(ammo > 5 ? Color.WHITE : Color.RED);
+            String ammoText = reloading ? "RELOADING..." : ammo + " / " + reserveAmmo;
+            font.draw(spriteBatch, ammoText, width - 150, 80);
+            font.setColor(Color.GRAY);
+            font.draw(spriteBatch, "PLASMA RIFLE", width - 150, 55);
+        } else {
+            font.setColor(Color.GRAY);
+            font.draw(spriteBatch, "[E] to equip", width - 150, 80);
+        }
 
         // Planet name
         font.setColor(new Color(0.8f, 0.9f, 1f, 1f));
@@ -525,7 +687,7 @@ public class PlanetExplorationScreen implements Screen {
 
         // Controls hint
         font.setColor(new Color(0.7f, 0.7f, 0.7f, 1f));
-        font.draw(spriteBatch, "WASD: Move | SHIFT: Sprint | SPACE: Jump | Double-SPACE: Jetpack | LMB: Shoot | ESC: Return", 20, 30);
+        font.draw(spriteBatch, "WASD: Move | SHIFT: Sprint | SPACE: Jump | 2xSPACE: Jetpack | LMB: Shoot | R: Reload | E: Equip | ESC: Return", 20, 30);
 
         // Debug info
         if (showDebug) {
