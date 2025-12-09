@@ -516,66 +516,143 @@ public class PlanetExplorationScreen implements Screen {
         int height = Gdx.graphics.getHeight();
 
         // Weapon bob effect
-        float bobX = MathUtils.sin(weaponBobTime) * 8f;
-        float bobY = Math.abs(MathUtils.cos(weaponBobTime)) * 6f;
+        float bobX = MathUtils.sin(weaponBobTime) * 6f;
+        float bobY = Math.abs(MathUtils.cos(weaponBobTime * 2f)) * 4f;
 
-        // Recoil effect
-        float recoilY = weaponRecoil * 30f;
+        // Recoil effect - kicks back and up
+        float recoilY = weaponRecoil * 25f;
+        float recoilX = weaponRecoil * -8f;
 
-        // Base position (bottom right of screen)
-        float weaponX = width * 0.65f + bobX;
-        float weaponY = height * 0.1f + bobY - recoilY;
+        // Base position (bottom right, angled like holding a rifle)
+        float baseX = width * 0.55f + bobX + recoilX;
+        float baseY = -height * 0.15f + bobY - recoilY;
 
-        // Reload animation - weapon dips down
+        // Reload animation - weapon tilts down and to side
+        float reloadTilt = 0f;
         if (reloading) {
             float reloadProgress = 1f - (reloadTimer / reloadTime);
-            float dipAmount = MathUtils.sin(reloadProgress * MathUtils.PI) * 80f;
-            weaponY -= dipAmount;
+            float dipAmount = MathUtils.sin(reloadProgress * MathUtils.PI);
+            baseY -= dipAmount * 60f;
+            baseX -= dipAmount * 30f;
+            reloadTilt = dipAmount * 15f;
         }
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        // Gun body (dark gray)
-        shapeRenderer.setColor(0.25f, 0.25f, 0.28f, 1f);
-        shapeRenderer.rect(weaponX, weaponY, 180, 45);
+        // === ARM ===
+        // Upper arm (coming from bottom right)
+        shapeRenderer.setColor(0.7f, 0.55f, 0.45f, 1f); // Skin tone
+        drawRotatedRect(baseX - 50, baseY + 20, 120, 55, -25 + reloadTilt);
 
-        // Gun barrel (lighter)
-        shapeRenderer.setColor(0.35f, 0.35f, 0.38f, 1f);
-        shapeRenderer.rect(weaponX + 150, weaponY + 15, 80, 20);
+        // Forearm
+        shapeRenderer.setColor(0.65f, 0.5f, 0.4f, 1f);
+        drawRotatedRect(baseX + 40, baseY + 60, 100, 50, -15 + reloadTilt);
 
-        // Barrel tip (plasma glow)
-        shapeRenderer.setColor(0.2f, 0.7f, 0.9f, 1f);
-        shapeRenderer.rect(weaponX + 225, weaponY + 17, 8, 16);
-
-        // Handle
+        // Glove/hand
         shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);
-        shapeRenderer.rect(weaponX + 50, weaponY - 35, 25, 40);
+        drawRotatedRect(baseX + 110, baseY + 85, 70, 45, -10 + reloadTilt);
+
+        // Fingers wrapped around grip
+        shapeRenderer.setColor(0.22f, 0.22f, 0.24f, 1f);
+        shapeRenderer.rect(baseX + 155, baseY + 95, 25, 35);
+        shapeRenderer.rect(baseX + 145, baseY + 90, 20, 30);
+
+        // === GUN ===
+        // Main receiver (angled, perspective)
+        shapeRenderer.setColor(0.28f, 0.28f, 0.3f, 1f);
+        drawRotatedRect(baseX + 100, baseY + 130, 200, 50, -5 + reloadTilt);
+
+        // Upper receiver / top rail
+        shapeRenderer.setColor(0.35f, 0.35f, 0.38f, 1f);
+        drawRotatedRect(baseX + 120, baseY + 175, 160, 18, -5 + reloadTilt);
+
+        // Barrel shroud
+        shapeRenderer.setColor(0.32f, 0.32f, 0.35f, 1f);
+        drawRotatedRect(baseX + 250, baseY + 145, 120, 35, -5 + reloadTilt);
+
+        // Barrel
+        shapeRenderer.setColor(0.4f, 0.4f, 0.42f, 1f);
+        drawRotatedRect(baseX + 340, baseY + 155, 80, 20, -5 + reloadTilt);
+
+        // Muzzle / plasma emitter (glowing)
+        float glowPulse = 0.7f + 0.3f * MathUtils.sin(weaponBobTime * 3f);
+        shapeRenderer.setColor(0.1f * glowPulse, 0.6f * glowPulse, 0.9f * glowPulse, 1f);
+        shapeRenderer.rect(baseX + 415, baseY + 152, 15, 26);
+
+        // Muzzle flash when firing
+        if (weaponRecoil > 0.5f) {
+            shapeRenderer.setColor(0.3f, 0.8f, 1f, weaponRecoil);
+            shapeRenderer.rect(baseX + 430, baseY + 145, 25, 40);
+            shapeRenderer.setColor(0.6f, 0.9f, 1f, weaponRecoil * 0.7f);
+            shapeRenderer.rect(baseX + 435, baseY + 155, 35, 20);
+        }
+
+        // Magazine / energy cell
+        shapeRenderer.setColor(0.22f, 0.22f, 0.25f, 1f);
+        shapeRenderer.rect(baseX + 170, baseY + 90, 35, 50);
+
+        // Energy cell glow
+        float cellGlow = (ammo / (float) maxAmmo) * 0.8f + 0.2f;
+        shapeRenderer.setColor(0.05f * cellGlow, 0.4f * cellGlow, 0.7f * cellGlow, 1f);
+        shapeRenderer.rect(baseX + 175, baseY + 95, 25, 40);
+
+        // Grip
+        shapeRenderer.setColor(0.18f, 0.18f, 0.2f, 1f);
+        shapeRenderer.rect(baseX + 150, baseY + 70, 30, 65);
 
         // Trigger guard
+        shapeRenderer.setColor(0.25f, 0.25f, 0.28f, 1f);
+        shapeRenderer.rect(baseX + 135, baseY + 105, 50, 8);
+
+        // Stock (extending back)
+        shapeRenderer.setColor(0.25f, 0.25f, 0.28f, 1f);
+        drawRotatedRect(baseX + 50, baseY + 120, 80, 35, -8 + reloadTilt);
+
+        // Cheek rest
         shapeRenderer.setColor(0.3f, 0.3f, 0.32f, 1f);
-        shapeRenderer.rect(weaponX + 40, weaponY - 15, 45, 8);
+        drawRotatedRect(baseX + 70, baseY + 150, 50, 15, -8 + reloadTilt);
 
-        // Top rail
-        shapeRenderer.setColor(0.4f, 0.4f, 0.42f, 1f);
-        shapeRenderer.rect(weaponX + 30, weaponY + 45, 120, 8);
+        // Scope/sight
+        shapeRenderer.setColor(0.2f, 0.2f, 0.22f, 1f);
+        shapeRenderer.rect(baseX + 200, baseY + 190, 60, 25);
+        // Scope lens
+        shapeRenderer.setColor(0.1f, 0.3f, 0.5f, 0.8f);
+        shapeRenderer.rect(baseX + 205, baseY + 195, 20, 15);
 
-        // Energy cell (glowing)
-        float glowIntensity = 0.5f + 0.3f * MathUtils.sin(weaponBobTime * 2f);
-        shapeRenderer.setColor(0.1f * glowIntensity, 0.6f * glowIntensity, 0.8f * glowIntensity, 1f);
-        shapeRenderer.rect(weaponX + 80, weaponY + 8, 40, 25);
-
-        // Ammo indicator lights
-        int lightsOn = (int) ((ammo / (float) maxAmmo) * 5);
-        for (int i = 0; i < 5; i++) {
+        // Ammo indicator LEDs on side
+        int lightsOn = (int) ((ammo / (float) maxAmmo) * 6);
+        for (int i = 0; i < 6; i++) {
             if (i < lightsOn) {
-                shapeRenderer.setColor(0.2f, 0.9f, 0.4f, 1f); // Green
+                shapeRenderer.setColor(0.2f, 0.9f, 0.3f, 1f);
             } else {
-                shapeRenderer.setColor(0.15f, 0.15f, 0.15f, 1f); // Dark
+                shapeRenderer.setColor(0.1f, 0.1f, 0.1f, 1f);
             }
-            shapeRenderer.rect(weaponX + 10 + i * 12, weaponY + 50, 8, 4);
+            shapeRenderer.rect(baseX + 220 + i * 10, baseY + 180, 6, 6);
+        }
+
+        // Details - vents on barrel shroud
+        shapeRenderer.setColor(0.15f, 0.15f, 0.18f, 1f);
+        for (int i = 0; i < 4; i++) {
+            shapeRenderer.rect(baseX + 260 + i * 20, baseY + 150, 8, 25);
         }
 
         shapeRenderer.end();
+    }
+
+    // Helper to draw rotated rectangles (simplified - just offsets for now)
+    private void drawRotatedRect(float x, float y, float width, float height, float angleDeg) {
+        // Simple approximation - shift corners based on angle
+        float rad = angleDeg * MathUtils.degreesToRadians;
+        float cos = MathUtils.cos(rad);
+        float sin = MathUtils.sin(rad);
+
+        float x1 = x, y1 = y;
+        float x2 = x + width * cos, y2 = y + width * sin;
+        float x3 = x + width * cos - height * sin, y3 = y + width * sin + height * cos;
+        float x4 = x - height * sin, y4 = y + height * cos;
+
+        shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
+        shapeRenderer.triangle(x1, y1, x3, y3, x4, y4);
     }
 
     private void renderUI() {
