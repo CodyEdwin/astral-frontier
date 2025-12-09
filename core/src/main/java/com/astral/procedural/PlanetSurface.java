@@ -56,9 +56,13 @@ public class PlanetSurface implements Disposable {
         // Lighting based on planet type
         switch (type) {
             case DESERT -> {
-                ambientColor = new Color(0.4f, 0.35f, 0.3f, 1f);
+                // Bright desert sun with strong ambient for visibility
+                ambientColor = new Color(0.7f, 0.65f, 0.55f, 1f);
                 environment.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientColor));
-                environment.add(new DirectionalLight().set(1f, 0.95f, 0.8f, -0.5f, -1f, -0.3f));
+                // Strong main sun light
+                environment.add(new DirectionalLight().set(1f, 0.95f, 0.85f, -0.4f, -0.8f, -0.3f));
+                // Fill light from opposite side to prevent harsh shadows
+                environment.add(new DirectionalLight().set(0.4f, 0.35f, 0.3f, 0.4f, -0.3f, 0.5f));
             }
             case ICE -> {
                 ambientColor = new Color(0.5f, 0.55f, 0.6f, 1f);

@@ -9,7 +9,9 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.Node;
@@ -248,13 +250,33 @@ public class TerrainChunk implements Disposable {
             default -> desertTexture;
         };
 
+        // Get base color for this planet type for ambient/emissive lighting
+        Color baseColor = switch (planetType) {
+            case DESERT -> new Color(0.85f, 0.72f, 0.5f, 1f);
+            case ICE -> new Color(0.85f, 0.92f, 1f, 1f);
+            case LAVA -> new Color(0.4f, 0.15f, 0.1f, 1f);
+            case FOREST -> new Color(0.25f, 0.45f, 0.2f, 1f);
+            case ROCKY -> new Color(0.5f, 0.45f, 0.4f, 1f);
+            case OCEAN -> new Color(0.3f, 0.5f, 0.6f, 1f);
+            default -> new Color(0.7f, 0.6f, 0.5f, 1f);
+        };
+
         if (texture != null) {
+            // Use texture with white diffuse so vertex colors multiply correctly
+            // Specular helps show lighting on terrain
             return new Material(
                 TextureAttribute.createDiffuse(texture),
-                ColorAttribute.createDiffuse(Color.WHITE)
+                ColorAttribute.createDiffuse(Color.WHITE),
+                ColorAttribute.createSpecular(0.15f, 0.15f, 0.1f, 1f),
+                FloatAttribute.createShininess(8f)
             );
         } else {
-            return new Material(ColorAttribute.createDiffuse(Color.WHITE));
+            // No texture - use solid color
+            return new Material(
+                ColorAttribute.createDiffuse(baseColor),
+                ColorAttribute.createSpecular(0.1f, 0.1f, 0.08f, 1f),
+                FloatAttribute.createShininess(4f)
+            );
         }
     }
 
@@ -326,11 +348,12 @@ public class TerrainChunk implements Disposable {
     }
 
     private Color getDesertColor(float h) {
-        if (h < 0.25f) return new Color(0.75f, 0.6f, 0.45f, 1f);
-        else if (h < 0.45f) return new Color(0.88f, 0.75f, 0.55f, 1f);
-        else if (h < 0.55f) return new Color(0.95f, 0.82f, 0.6f, 1f);
-        else if (h < 0.75f) return new Color(1f, 0.88f, 0.65f, 1f);
-        else return new Color(0.8f, 0.65f, 0.5f, 1f);
+        // Bright colors to ensure visibility - these multiply with texture
+        if (h < 0.25f) return new Color(0.9f, 0.8f, 0.65f, 1f);
+        else if (h < 0.45f) return new Color(0.95f, 0.85f, 0.7f, 1f);
+        else if (h < 0.55f) return new Color(1f, 0.9f, 0.75f, 1f);
+        else if (h < 0.75f) return new Color(1f, 0.95f, 0.8f, 1f);
+        else return new Color(0.95f, 0.85f, 0.7f, 1f);
     }
 
     private Color getIceColor(float h) {
