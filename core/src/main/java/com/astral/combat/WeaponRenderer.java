@@ -81,6 +81,10 @@ public class WeaponRenderer {
         float baseX = MathUtils.lerp(hipX, adsX, aimTransition) + bobX;
         float baseY = MathUtils.lerp(hipY, adsY, aimTransition) + bobY - recoilAmt;
 
+        // Calculate tilt toward crosshair (center of screen) when hip-firing
+        // Tilt decreases as we aim down sights
+        float tiltAmount = (1f - aimTransition) * -0.15f;  // Negative to tilt left toward center
+
         // Weapon switch animation - slide down
         baseY -= (1f - switchProgress) * height * 0.4f;
 
@@ -96,6 +100,14 @@ public class WeaponRenderer {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
         float s = height / 550f;  // scale
+
+        // Apply rotation for hip-fire tilt toward crosshair
+        // Rotate around the base of the weapon
+        float rotationDegrees = tiltAmount * 60f;  // Convert tilt to degrees
+        shapeRenderer.identity();
+        shapeRenderer.translate(baseX, baseY, 0);
+        shapeRenderer.rotate(0, 0, 1, rotationDegrees);
+        shapeRenderer.translate(-baseX, -baseY, 0);
 
         switch (type) {
             case PLASMA_RIFLE:
@@ -114,6 +126,9 @@ public class WeaponRenderer {
                 renderPulseSMG(baseX, baseY, s, ammo, maxAmmo, type);
                 break;
         }
+
+        // Reset transformation
+        shapeRenderer.identity();
 
         shapeRenderer.end();
     }
