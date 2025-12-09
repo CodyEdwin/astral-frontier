@@ -38,12 +38,12 @@ public class GltfWeaponRenderer implements Disposable {
     private boolean initialized = false;
 
     // Weapon positioning (FPS view)
-    private final Vector3 weaponOffset = new Vector3(0.15f, -0.12f, 0.3f);  // Right, down, forward
-    private final Vector3 weaponScale = new Vector3(0.002f, 0.002f, 0.002f);  // Scale down the model significantly
+    private final Vector3 weaponOffset = new Vector3(0.08f, -0.06f, 0.15f);  // Right, down, forward
+    private final Vector3 weaponScale = new Vector3(0.0004f, 0.0004f, 0.0004f);  // Scale down the model significantly
     private final Quaternion weaponRotation = new Quaternion();
 
     // Aim offset
-    private final Vector3 aimOffset = new Vector3(0f, -0.1f, 0.25f);  // Center when aiming
+    private final Vector3 aimOffset = new Vector3(0f, -0.05f, 0.12f);  // Center when aiming
     private float aimTransition = 0f;
 
     // Weapon bob
