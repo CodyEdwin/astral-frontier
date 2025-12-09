@@ -38,12 +38,12 @@ public class GltfWeaponRenderer implements Disposable {
     private boolean initialized = false;
 
     // Weapon positioning (FPS view)
-    private final Vector3 weaponOffset = new Vector3(0.25f, -0.2f, -0.5f);  // Right, down, forward
-    private final Vector3 weaponScale = new Vector3(0.015f, 0.015f, 0.015f);  // Scale down the model
+    private final Vector3 weaponOffset = new Vector3(0.15f, -0.12f, 0.3f);  // Right, down, forward
+    private final Vector3 weaponScale = new Vector3(0.002f, 0.002f, 0.002f);  // Scale down the model significantly
     private final Quaternion weaponRotation = new Quaternion();
 
     // Aim offset
-    private final Vector3 aimOffset = new Vector3(0f, -0.15f, -0.4f);  // Center when aiming
+    private final Vector3 aimOffset = new Vector3(0f, -0.1f, 0.25f);  // Center when aiming
     private float aimTransition = 0f;
 
     // Weapon bob
@@ -181,7 +181,7 @@ public class GltfWeaponRenderer implements Disposable {
         Vector3 worldPos = new Vector3(camera.position);
         worldPos.add(right.scl(offset.x));
         worldPos.add(up.scl(offset.y));
-        worldPos.add(forward.nor().scl(-offset.z));  // Negative Z is forward
+        worldPos.add(forward.nor().scl(offset.z));  // Positive Z is forward
 
         // Create rotation to face camera direction
         Matrix4 transform = scene.modelInstance.transform;
