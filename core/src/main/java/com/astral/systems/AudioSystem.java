@@ -234,12 +234,25 @@ public class AudioSystem extends GameSystem implements Disposable {
     private Sound getSound(String id) {
         Sound sound = soundCache.get(id);
         if (sound == null) {
-            try {
-                sound = Gdx.audio.newSound(Gdx.files.internal("audio/sfx/" + id + ".ogg"));
-                soundCache.put(id, sound);
-            } catch (Exception e) {
-                Gdx.app.error("AudioSystem", "Failed to load sound: " + id);
+            // Try different audio formats and paths
+            String[] paths = {"audio/" + id, "audio/sfx/" + id};
+            String[] extensions = {".mp3", ".ogg", ".wav"};
+            for (String basePath : paths) {
+                for (String ext : extensions) {
+                    try {
+                        String path = basePath + ext;
+                        if (Gdx.files.internal(path).exists()) {
+                            sound = Gdx.audio.newSound(Gdx.files.internal(path));
+                            soundCache.put(id, sound);
+                            Gdx.app.log("AudioSystem", "Loaded sound: " + path);
+                            return sound;
+                        }
+                    } catch (Exception e) {
+                        // Try next format
+                    }
+                }
             }
+            Gdx.app.error("AudioSystem", "Failed to load sound: " + id);
         }
         return sound;
     }

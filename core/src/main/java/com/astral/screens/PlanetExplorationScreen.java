@@ -25,6 +25,7 @@ import com.astral.combat.Enemy;
 import com.astral.combat.GroundProjectile;
 import com.astral.combat.WeaponType;
 import com.astral.combat.WeaponRenderer;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.utils.Array;
 
 /**
@@ -114,6 +115,14 @@ public class PlanetExplorationScreen implements Screen {
     private float normalFOV = 75f;
     private float aimFOV = 45f;
 
+    // Weapon sounds
+    private Sound automaticWeaponSound;
+    private Sound pistolShotSound;
+
+    // Hitmarker
+    private float hitmarkerTimer = 0f;
+    private static final float HITMARKER_DURATION = 0.15f;
+
     public PlanetExplorationScreen(AstralFrontier game, long planetSeed, PlanetType planetType, String planetName) {
         this.game = game;
 
@@ -163,6 +172,20 @@ public class PlanetExplorationScreen implements Screen {
         }
         currentWeapon = WeaponType.PLASMA_RIFLE;
         currentWeaponIndex = 0;
+
+        // Load weapon sounds
+        try {
+            automaticWeaponSound = Gdx.audio.newSound(Gdx.files.internal("audio/automatic-weapon.mp3"));
+            Gdx.app.log("Audio", "Loaded automatic-weapon.mp3");
+        } catch (Exception e) {
+            Gdx.app.error("Audio", "Failed to load automatic-weapon.mp3: " + e.getMessage());
+        }
+        try {
+            pistolShotSound = Gdx.audio.newSound(Gdx.files.internal("audio/pistol-shot.mp3"));
+            Gdx.app.log("Audio", "Loaded pistol-shot.mp3");
+        } catch (Exception e) {
+            Gdx.app.error("Audio", "Failed to load pistol-shot.mp3: " + e.getMessage());
+        }
 
         Gdx.app.log("PlanetExploration", "Spawned at " + playerPosition);
     }
@@ -393,6 +416,9 @@ public class PlanetExplorationScreen implements Screen {
         }
         lastHealth = playerHealth;
 
+        // Hitmarker decay
+        hitmarkerTimer = Math.max(0, hitmarkerTimer - delta);
+
         // Reset just fired flag
         justFired = false;
 
@@ -485,6 +511,20 @@ public class PlanetExplorationScreen implements Screen {
             weaponAmmo[currentWeaponIndex]--;
             justFired = true;
 
+            // Play weapon sound based on weapon type
+            // Fast-firing weapons use automatic sound, slow weapons use pistol sound
+            if (currentWeapon.fireRate < 0.2f) {
+                // Automatic weapons (PLASMA_RIFLE, PULSE_SMG)
+                if (automaticWeaponSound != null) {
+                    automaticWeaponSound.play(0.5f);  // Lower volume to avoid clipping on rapid fire
+                }
+            } else {
+                // Semi-auto weapons (LASER_PISTOL, SCATTER_GUN, RAIL_CANNON)
+                if (pistolShotSound != null) {
+                    pistolShotSound.play(0.7f);
+                }
+            }
+
             // Auto-reload when empty
             if (weaponAmmo[currentWeaponIndex] <= 0 && weaponReserve[currentWeaponIndex] > 0) {
                 reloading = true;
@@ -531,6 +571,7 @@ public class PlanetExplorationScreen implements Screen {
             // Check enemy collisions
             for (Enemy enemy : enemies) {
                 if (proj.checkHit(enemy)) {
+                    hitmarkerTimer = HITMARKER_DURATION;  // Trigger hitmarker
                     break;
                 }
             }
@@ -621,13 +662,71 @@ public class PlanetExplorationScreen implements Screen {
             weaponRenderer.render(currentWeapon, ammo, maxAmmo, reloading, reloadProgress);
         }
 
-        spriteBatch.begin();
-
-        // Crosshair
+        // Draw crosshair with ShapeRenderer
         int cx = width / 2;
         int cy = height / 2;
-        font.setColor(Color.WHITE);
-        font.draw(spriteBatch, "+", cx - 5, cy + 8);
+        float crosshairSize = 12f;
+        float crosshairThickness = 2f;
+        float gap = 4f;  // Gap in center for visibility
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        // Crosshair color - white normally, red when hitmarker active
+        if (hitmarkerTimer > 0) {
+            shapeRenderer.setColor(1f, 0.2f, 0.2f, 1f);  // Red for hit
+        } else {
+            shapeRenderer.setColor(1f, 1f, 1f, 0.9f);  // White
+        }
+
+        // Draw round crosshair - 4 lines with gap in center
+        // Top line
+        shapeRenderer.rectLine(cx, cy + gap, cx, cy + crosshairSize, crosshairThickness);
+        // Bottom line
+        shapeRenderer.rectLine(cx, cy - gap, cx, cy - crosshairSize, crosshairThickness);
+        // Left line
+        shapeRenderer.rectLine(cx - gap, cy, cx - crosshairSize, cy, crosshairThickness);
+        // Right line
+        shapeRenderer.rectLine(cx + gap, cy, cx + crosshairSize, cy, crosshairThickness);
+
+        // Draw outer circle/ring (using arc segments)
+        shapeRenderer.setColor(1f, 1f, 1f, 0.4f);
+        float ringRadius = crosshairSize + 4f;
+        int segments = 32;
+        for (int i = 0; i < segments; i++) {
+            float angle1 = (float) (i * 2 * Math.PI / segments);
+            float angle2 = (float) ((i + 1) * 2 * Math.PI / segments);
+            float x1 = cx + (float) Math.cos(angle1) * ringRadius;
+            float y1 = cy + (float) Math.sin(angle1) * ringRadius;
+            float x2 = cx + (float) Math.cos(angle2) * ringRadius;
+            float y2 = cy + (float) Math.sin(angle2) * ringRadius;
+            shapeRenderer.rectLine(x1, y1, x2, y2, 1f);
+        }
+
+        // Draw hitmarker X when hit
+        if (hitmarkerTimer > 0) {
+            float hitSize = 8f + (hitmarkerTimer / HITMARKER_DURATION) * 4f;  // Animate size
+            float hitAlpha = hitmarkerTimer / HITMARKER_DURATION;
+            shapeRenderer.setColor(1f, 0.2f, 0.2f, hitAlpha);
+
+            // X shape - diagonal lines
+            shapeRenderer.rectLine(cx - hitSize, cy - hitSize, cx + hitSize, cy + hitSize, 3f);
+            shapeRenderer.rectLine(cx - hitSize, cy + hitSize, cx + hitSize, cy - hitSize, 3f);
+        }
+
+        shapeRenderer.end();
+
+        // Center dot
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        if (hitmarkerTimer > 0) {
+            shapeRenderer.setColor(1f, 0.2f, 0.2f, 1f);
+        } else {
+            shapeRenderer.setColor(1f, 1f, 1f, 1f);
+        }
+        shapeRenderer.circle(cx, cy, 2f);
+        shapeRenderer.end();
+
+        spriteBatch.begin();
 
         // Ammo display (bottom right)
         if (weaponEquipped) {
@@ -786,5 +885,9 @@ public class PlanetExplorationScreen implements Screen {
             proj.dispose();
         }
         projectiles.clear();
+
+        // Dispose weapon sounds
+        if (automaticWeaponSound != null) automaticWeaponSound.dispose();
+        if (pistolShotSound != null) pistolShotSound.dispose();
     }
 }
