@@ -17,9 +17,10 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
- * Hostile NPC enemy that chases and attacks the player
+ * Hostile NPC enemy that chases and attacks the player.
+ * Implements ICombatEntity for standardized combat interactions.
  */
-public class Enemy implements Disposable {
+public class Enemy implements ICombatEntity {
 
     public enum EnemyType {
         SAND_CRAWLER(30f, 4f, 10f, 1.5f, new Color(0.6f, 0.4f, 0.2f, 1f)),
@@ -225,13 +226,35 @@ public class Enemy implements Disposable {
         }
     }
 
+    @Override
     public boolean isAlive() { return alive; }
+
+    @Override
     public Vector3 getPosition() { return position; }
+
     public float getSize() { return type.size; }
+
+    @Override
     public float getHealth() { return health; }
+
+    @Override
     public float getMaxHealth() { return maxHealth; }
+
+    @Override
     public ModelInstance getModelInstance() { return modelInstance; }
+
     public boolean isAggro() { return aggro; }
+
+    /**
+     * Simple update without player tracking (for ICombatEntity interface)
+     */
+    @Override
+    public void update(float delta) {
+        // Basic update - timers only, no movement
+        if (!alive) return;
+        hitFlashTime = Math.max(0, hitFlashTime - delta);
+        attackCooldown = Math.max(0, attackCooldown - delta);
+    }
 
     @Override
     public void dispose() {

@@ -6,9 +6,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector3;
 
 /**
- * Handles player movement, jumping, jetpack, and collision
+ * Handles player movement, jumping, jetpack, and collision.
+ * Implements IPlayerController for standardized player behavior.
  */
-public class PlayerController {
+public class PlayerController implements IPlayerController {
 
     // Player state
     private final Vector3 position = new Vector3(0, 10, 0);
@@ -44,6 +45,7 @@ public class PlayerController {
     public PlayerController() {
     }
 
+    @Override
     public void setPosition(float x, float y, float z) {
         position.set(x, y, z);
     }
@@ -156,15 +158,29 @@ public class PlayerController {
         cameraPitch = Math.max(-89f, Math.min(89f, cameraPitch));
     }
 
-    // Getters
+    // Getters - IPlayerController implementation
+    @Override
     public Vector3 getPosition() { return position; }
+
+    @Override
     public Vector3 getVelocity() { return velocity; }
+
+    @Override
     public boolean isGrounded() { return isGrounded; }
+
     public boolean isJetpackActive() { return jetpackActive; }
     public float getJetpackFuel() { return jetpackFuel; }
     public float getJetpackMaxFuel() { return jetpackMaxFuel; }
+
+    @Override
     public float getCameraYaw() { return cameraYaw; }
+
+    @Override
     public float getCameraPitch() { return cameraPitch; }
+
+    @Override
     public float getPlayerHeight() { return playerHeight; }
+
+    @Override
     public float getEyeHeight() { return eyeHeight; }
 }

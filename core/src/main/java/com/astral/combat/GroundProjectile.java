@@ -16,9 +16,10 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
- * A projectile fired by ground weapons
+ * A projectile fired by ground weapons.
+ * Implements IProjectile for standardized projectile behavior.
  */
-public class GroundProjectile implements Disposable {
+public class GroundProjectile implements IProjectile {
 
     private Vector3 position;
     private Vector3 velocity;
@@ -158,10 +159,46 @@ public class GroundProjectile implements Disposable {
         return false;
     }
 
+    @Override
     public boolean isAlive() { return alive; }
+
+    @Override
     public Vector3 getPosition() { return position; }
+
+    @Override
     public ModelInstance getModelInstance() { return modelInstance; }
+
+    @Override
     public float getDamage() { return damage; }
+
+    @Override
+    public Vector3 getDirection() {
+        return new Vector3(velocity).nor();
+    }
+
+    @Override
+    public float getSpeed() {
+        return velocity.len();
+    }
+
+    @Override
+    public boolean checkHit(ICombatEntity entity) {
+        if (!alive || !entity.isAlive()) return false;
+
+        // For enemies, use their size for collision detection
+        float targetSize = 1.5f; // Default size
+        if (entity instanceof Enemy) {
+            targetSize = ((Enemy) entity).getSize() * 0.6f;
+        }
+
+        float dist = position.dst(entity.getPosition());
+        if (dist < targetSize + size) {
+            entity.takeDamage(damage);
+            alive = false;
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public void dispose() {
