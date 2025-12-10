@@ -5,7 +5,7 @@ import com.astral.combat.Enemy;
 import com.astral.combat.GroundProjectile;
 import com.astral.procedural.PlanetSurface;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.MathUtils;
@@ -41,7 +41,7 @@ public class CombatManager implements Disposable {
     public CombatManager() {
     }
 
-    public void initialize(Camera camera) {
+    public void initialize(PerspectiveCamera camera) {
         bulletHoleManager = new BulletHoleManager();
         bulletHoleManager.initialize(camera);
     }
