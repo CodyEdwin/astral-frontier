@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    eclipse
 }
 
 val gdxVersion: String by project

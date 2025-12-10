@@ -1,6 +1,7 @@
 plugins {
     java
     application
+    eclipse
 }
 
 val gdxVersion: String by project
