@@ -8,6 +8,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -52,6 +53,7 @@ public class StarfieldShipBuilderScreen implements Screen {
     private BitmapFont font;
     private BitmapFont fontLarge;
     private GlyphLayout layout;
+    private OrthographicCamera uiCamera;
 
     // UI State
     private ShipPartType.PartCategory selectedCategory = ShipPartType.PartCategory.HULL;
@@ -114,6 +116,8 @@ public class StarfieldShipBuilderScreen implements Screen {
 
         // Initialize 2D
         batch = new SpriteBatch();
+        uiCamera = new OrthographicCamera();
+        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         font = new BitmapFont();
         font.setColor(Color.WHITE);
         fontLarge = new BitmapFont();
@@ -548,14 +552,16 @@ public class StarfieldShipBuilderScreen implements Screen {
     }
 
     private void renderUI() {
-        batch.begin();
-
         int screenW = Gdx.graphics.getWidth();
         int screenH = Gdx.graphics.getHeight();
 
-        // Draw panels
-        batch.end();
+        // Update UI camera
+        uiCamera.setToOrtho(false, screenW, screenH);
+        uiCamera.update();
+
+        // Draw panels with UI camera
         Gdx.gl.glEnable(GL20.GL_BLEND);
+        shapeRenderer.setProjectionMatrix(uiCamera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
         // Left panel (parts list)
@@ -576,6 +582,8 @@ public class StarfieldShipBuilderScreen implements Screen {
 
         shapeRenderer.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
+        
+        batch.setProjectionMatrix(uiCamera.combined);
         batch.begin();
 
         // Title
