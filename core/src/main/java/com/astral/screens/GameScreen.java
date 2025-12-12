@@ -7,7 +7,7 @@ import com.astral.ecs.World;
 import com.astral.procedural.PlanetType;
 import com.astral.screens.factories.PlayerShipFactory;
 import com.astral.screens.factories.WorldObjectFactory;
-import com.astral.screens.shipbuilder.StarfieldStyleBuilder;
+import com.astral.screens.shipbuilder.StarfieldShipBuilderScreen;
 import com.astral.screens.ui.PauseMenuRenderer;
 import com.astral.systems.*;
 import com.badlogic.gdx.Gdx;
@@ -179,7 +179,7 @@ public class GameScreen implements Screen {
         inputSystem.setMouseLocked(false);
         Gdx.input.setCursorCatched(false);
 
-        StarfieldStyleBuilder builderScreen = new StarfieldStyleBuilder(
+        StarfieldShipBuilderScreen builderScreen = new StarfieldShipBuilderScreen(
             game,
             this
         );
