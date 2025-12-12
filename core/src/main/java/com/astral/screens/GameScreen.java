@@ -7,6 +7,7 @@ import com.astral.ecs.World;
 import com.astral.procedural.PlanetType;
 import com.astral.screens.factories.PlayerShipFactory;
 import com.astral.screens.factories.WorldObjectFactory;
+import com.astral.screens.shipbuilder.StarfieldStyleBuilder;
 import com.astral.screens.ui.PauseMenuRenderer;
 import com.astral.systems.*;
 import com.badlogic.gdx.Gdx;
@@ -114,8 +115,14 @@ public class GameScreen implements Screen {
         worldObjectFactory.createAsteroids(world, 20, 500f);
 
         // Create test planet
-        worldObjectFactory.createPlanet(world, PLANET_POSITION, PLANET_RADIUS,
-                new Color(0.2f, 0.5f, 0.3f, 1f), "Test Planet", transitionManager);
+        worldObjectFactory.createPlanet(
+            world,
+            PLANET_POSITION,
+            PLANET_RADIUS,
+            new Color(0.2f, 0.5f, 0.3f, 1f),
+            "Test Planet",
+            transitionManager
+        );
     }
 
     private void setupInput() {
@@ -151,6 +158,11 @@ public class GameScreen implements Screen {
             renderSystem.toggleDebugInfo();
         }
 
+        // Ship Builder - open with H key
+        if (Gdx.input.isKeyJustPressed(Input.Keys.H)) {
+            openShipBuilder();
+        }
+
         // FPS mode toggle
         if (Gdx.input.isKeyJustPressed(Input.Keys.F) && playerEntity != null) {
             transitionManager.toggleFPSMode(playerEntity);
@@ -162,6 +174,19 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void openShipBuilder() {
+        // Unlock mouse cursor before switching to ship builder
+        inputSystem.setMouseLocked(false);
+        Gdx.input.setCursorCatched(false);
+
+        StarfieldStyleBuilder builderScreen = new StarfieldStyleBuilder(
+            game,
+            this
+        );
+        game.setScreen(builderScreen);
+        Gdx.app.log("GameScreen", "Opening Starfield-style ship builder...");
+    }
+
     private void update(float delta) {
         updateCamera();
         fpsController.update(delta);
@@ -170,8 +195,8 @@ public class GameScreen implements Screen {
         // Update UI with planet info
         uiSystem.setPlanetInfo("Test Planet", PLANET_POSITION);
         uiSystem.setTransitionState(
-                transitionManager.getCurrentState().name(),
-                transitionManager.getTransitionProgress()
+            transitionManager.getCurrentState().name(),
+            transitionManager.getTransitionProgress()
         );
 
         world.update(delta);
@@ -196,10 +221,14 @@ public class GameScreen implements Screen {
     private void updateCamera() {
         if (playerEntity == null) return;
 
-        TransformComponent transform = playerEntity.get(TransformComponent.class);
+        TransformComponent transform = playerEntity.get(
+            TransformComponent.class
+        );
         CameraComponent camComp = playerEntity.get(CameraComponent.class);
 
-        if (transform == null || camComp == null || camComp.camera == null) return;
+        if (
+            transform == null || camComp == null || camComp.camera == null
+        ) return;
 
         Vector3 camPos = transform.position.cpy();
 
@@ -210,7 +239,9 @@ public class GameScreen implements Screen {
             camComp.camera.direction.set(transform.getForward());
             camComp.camera.up.set(transform.getUp());
         } else if (camComp.mode == CameraComponent.CameraMode.CHASE) {
-            Vector3 back = transform.getForward().scl(-camComp.thirdPersonDistance);
+            Vector3 back = transform
+                .getForward()
+                .scl(-camComp.thirdPersonDistance);
             Vector3 up = transform.getUp().scl(camComp.thirdPersonHeight);
             camPos.add(back).add(up);
             camComp.camera.position.set(camPos);
@@ -237,11 +268,17 @@ public class GameScreen implements Screen {
 
     @Override
     public void resume() {
+        // Re-lock mouse cursor when returning from ship builder or other screens
+        if (inputSystem != null) {
+            Gdx.input.setInputProcessor(inputSystem);
+            inputSystem.setMouseLocked(true);
+            Gdx.input.setCursorCatched(false); // Make sure it's visible but locked
+        }
+        Gdx.app.log("GameScreen", "Game resumed - mouse locked");
     }
 
     @Override
-    public void hide() {
-    }
+    public void hide() {}
 
     @Override
     public void dispose() {

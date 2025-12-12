@@ -69,7 +69,15 @@ public class RenderSystem extends GameSystem implements Disposable {
 
         // Setup environment
         environment = new Environment();
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
+        environment.set(
+            new ColorAttribute(
+                ColorAttribute.AmbientLight,
+                0.2f,
+                0.2f,
+                0.2f,
+                1f
+            )
+        );
 
         // Sun light
         sunLight = new DirectionalLight();
@@ -99,8 +107,12 @@ public class RenderSystem extends GameSystem implements Disposable {
             double phi = Math.acos(2 * Math.random() - 1);
             float r = 50000f; // Far distance
 
-            starPositions[i * 3] = (float) (r * Math.sin(phi) * Math.cos(theta));
-            starPositions[i * 3 + 1] = (float) (r * Math.sin(phi) * Math.sin(theta));
+            starPositions[i * 3] = (float) (r *
+                Math.sin(phi) *
+                Math.cos(theta));
+            starPositions[i * 3 + 1] = (float) (r *
+                Math.sin(phi) *
+                Math.sin(theta));
             starPositions[i * 3 + 2] = (float) (r * Math.cos(phi));
 
             // Star color (white to blue to orange)
@@ -182,7 +194,12 @@ public class RenderSystem extends GameSystem implements Disposable {
             float b = starColors[i * 3 + 2];
             float brightness = starMagnitudes[i] / 3f;
 
-            shapeRenderer.setColor(r * brightness, g * brightness, b * brightness, brightness);
+            shapeRenderer.setColor(
+                r * brightness,
+                g * brightness,
+                b * brightness,
+                brightness
+            );
             shapeRenderer.point(x, y, z);
         }
 
@@ -198,12 +215,15 @@ public class RenderSystem extends GameSystem implements Disposable {
 
         modelBatch.begin(activeCamera);
 
-        Array<Entity> renderables = getEntitiesWith(RenderComponent.class, TransformComponent.class);
+        Array<Entity> renderables = getEntitiesWith(
+            RenderComponent.class,
+            TransformComponent.class
+        );
         for (Entity entity : renderables) {
             RenderComponent render = entity.get(RenderComponent.class);
             TransformComponent transform = entity.get(TransformComponent.class);
 
-            if (!render.visible || render.modelInstance == null) continue;
+            if (!render.visible) continue;
 
             // Frustum culling
             float distance = transform.position.dst(activeCamera.position);
@@ -211,10 +231,23 @@ public class RenderSystem extends GameSystem implements Disposable {
 
             // Update model transform
             transform.updateMatrix();
-            render.modelInstance.transform.set(transform.worldMatrix);
 
-            modelBatch.render(render.modelInstance, environment);
-            drawCalls++;
+            // Render primary model instance
+            if (render.modelInstance != null) {
+                render.modelInstance.transform.set(transform.worldMatrix);
+                modelBatch.render(render.modelInstance, environment);
+                drawCalls++;
+            }
+
+            // Render additional instances (for multi-part ships)
+            if (render.additionalInstances != null) {
+                for (ModelInstance instance : render.additionalInstances) {
+                    instance.transform.set(transform.worldMatrix);
+                    modelBatch.render(instance, environment);
+                    drawCalls++;
+                }
+            }
+
             visibleEntities++;
         }
 
@@ -225,16 +258,38 @@ public class RenderSystem extends GameSystem implements Disposable {
         spriteBatch.begin();
 
         int y = Gdx.graphics.getHeight() - 20;
-        font.draw(spriteBatch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, y);
+        font.draw(
+            spriteBatch,
+            "FPS: " + Gdx.graphics.getFramesPerSecond(),
+            10,
+            y
+        );
         font.draw(spriteBatch, "Draw Calls: " + drawCalls, 10, y - 20);
-        font.draw(spriteBatch, "Visible Entities: " + visibleEntities, 10, y - 40);
-        font.draw(spriteBatch, "Total Entities: " + world.getEntityCount(), 10, y - 60);
+        font.draw(
+            spriteBatch,
+            "Visible Entities: " + visibleEntities,
+            10,
+            y - 40
+        );
+        font.draw(
+            spriteBatch,
+            "Total Entities: " + world.getEntityCount(),
+            10,
+            y - 60
+        );
 
         if (activeCamera != null) {
-            font.draw(spriteBatch, String.format("Camera: %.0f, %.0f, %.0f",
+            font.draw(
+                spriteBatch,
+                String.format(
+                    "Camera: %.0f, %.0f, %.0f",
                     activeCamera.position.x,
                     activeCamera.position.y,
-                    activeCamera.position.z), 10, y - 80);
+                    activeCamera.position.z
+                ),
+                10,
+                y - 80
+            );
         }
 
         spriteBatch.end();

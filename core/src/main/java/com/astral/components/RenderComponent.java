@@ -4,6 +4,7 @@ import com.astral.ecs.Component;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Array;
 
 /**
  * Render component for 3D models
@@ -11,6 +12,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 public class RenderComponent implements Component {
 
     public ModelInstance modelInstance;
+    public Array<ModelInstance> additionalInstances; // For multi-part models like modular ships
     public Material[] materials;
     public BoundingBox bounds;
     public int lodLevel = 0;
@@ -33,6 +35,7 @@ public class RenderComponent implements Component {
     @Override
     public void reset() {
         modelInstance = null;
+        additionalInstances = null;
         materials = null;
         bounds = null;
         lodLevel = 0;
