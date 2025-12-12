@@ -6,11 +6,47 @@ package com.astral.shipbuilding;
 public enum ShipPartType {
     // Hull Parts
     HULL_COCKPIT("Cockpit", PartCategory.HULL, 1),
+    HULL_COCKPIT_LARGE("Large Cockpit", PartCategory.HULL, 1),
     HULL_NOSE("Nose Section", PartCategory.HULL, 1),
     HULL_FORWARD("Forward Hull", PartCategory.HULL, 3),
     HULL_MID("Mid Hull", PartCategory.HULL, 5),
     HULL_AFT("Aft Hull", PartCategory.HULL, 3),
     HULL_TAIL("Tail Section", PartCategory.HULL, 1),
+
+    // Habitation Modules (Starfield-style)
+    HAB_LIVING_QUARTERS("Living Quarters", PartCategory.HAB, 2),
+    HAB_MESS_HALL("Mess Hall", PartCategory.HAB, 1),
+    HAB_CAPTAIN_QUARTERS("Captain's Quarters", PartCategory.HAB, 1),
+    HAB_CREW_STATION("Crew Station", PartCategory.HAB, 3),
+    HAB_ARMORY("Armory", PartCategory.HAB, 1),
+    HAB_WORKSHOP("Workshop", PartCategory.HAB, 1),
+    HAB_SCIENCE_LAB("Science Lab", PartCategory.HAB, 1),
+    HAB_INFIRMARY("Infirmary", PartCategory.HAB, 1),
+
+    // Reactors (Determine Ship Class)
+    REACTOR_CLASS_A("Class A Reactor", PartCategory.REACTOR, 1),
+    REACTOR_CLASS_B("Class B Reactor", PartCategory.REACTOR, 1),
+    REACTOR_CLASS_C("Class C Reactor", PartCategory.REACTOR, 1),
+
+    // Grav Drives (Jump Range)
+    GRAV_DRIVE_BASIC("Basic Grav Drive", PartCategory.GRAV_DRIVE, 1),
+    GRAV_DRIVE_ADVANCED("Advanced Grav Drive", PartCategory.GRAV_DRIVE, 1),
+    GRAV_DRIVE_MILITARY("Military Grav Drive", PartCategory.GRAV_DRIVE, 1),
+
+    // Landing Gear
+    LANDING_GEAR_SMALL("Small Landing Gear", PartCategory.LANDING_GEAR, 4),
+    LANDING_GEAR_MEDIUM("Medium Landing Gear", PartCategory.LANDING_GEAR, 4),
+    LANDING_GEAR_LARGE("Large Landing Gear", PartCategory.LANDING_GEAR, 4),
+
+    // Docker/Bay
+    DOCKER_STANDARD("Standard Docker", PartCategory.DOCKER, 2),
+    DOCKER_SLIM("Slim Docker", PartCategory.DOCKER, 2),
+    LANDING_BAY("Landing Bay", PartCategory.DOCKER, 1),
+
+    // Shield Generators (as separate modules)
+    SHIELD_LIGHT("Light Shield Generator", PartCategory.SHIELD, 1),
+    SHIELD_MEDIUM("Medium Shield Generator", PartCategory.SHIELD, 1),
+    SHIELD_HEAVY("Heavy Shield Generator", PartCategory.SHIELD, 1),
 
     // Wing Parts
     WING_STANDARD("Standard Wing", PartCategory.WING, 2),
@@ -54,6 +90,12 @@ public enum ShipPartType {
 
     public enum PartCategory {
         HULL("Hull"),
+        HAB("Hab"),
+        REACTOR("Reactor"),
+        GRAV_DRIVE("Grav Drive"),
+        LANDING_GEAR("Landing Gear"),
+        DOCKER("Docker"),
+        SHIELD("Shields"),
         WING("Wings"),
         ENGINE("Engines"),
         WEAPON("Weapons"),

@@ -182,6 +182,83 @@ public class ShipPartMeshFactory implements Disposable {
             case DECOR_EXHAUST:
                 buildExhaustMesh(mesh, primary, secondary);
                 break;
+
+            // Starfield-style Parts
+            case HULL_COCKPIT_LARGE:
+                buildLargeCockpitMesh(mesh, primary, secondary);
+                break;
+
+            // Habitation Modules
+            case HAB_LIVING_QUARTERS:
+            case HAB_MESS_HALL:
+            case HAB_CAPTAIN_QUARTERS:
+            case HAB_CREW_STATION:
+            case HAB_ARMORY:
+            case HAB_WORKSHOP:
+            case HAB_SCIENCE_LAB:
+            case HAB_INFIRMARY:
+                buildHabModuleMesh(mesh, type, primary, secondary);
+                break;
+
+            // Reactors
+            case REACTOR_CLASS_A:
+                buildReactorMesh(mesh, primary, secondary, 0.8f);
+                break;
+            case REACTOR_CLASS_B:
+                buildReactorMesh(mesh, primary, secondary, 1.0f);
+                break;
+            case REACTOR_CLASS_C:
+                buildReactorMesh(mesh, primary, secondary, 1.3f);
+                break;
+
+            // Grav Drives
+            case GRAV_DRIVE_BASIC:
+                buildGravDriveMesh(mesh, primary, secondary, 0.8f);
+                break;
+            case GRAV_DRIVE_ADVANCED:
+                buildGravDriveMesh(mesh, primary, secondary, 1.0f);
+                break;
+            case GRAV_DRIVE_MILITARY:
+                buildGravDriveMesh(mesh, primary, secondary, 1.2f);
+                break;
+
+            // Landing Gear
+            case LANDING_GEAR_SMALL:
+                buildLandingGearMesh(mesh, primary, secondary, 0.7f);
+                break;
+            case LANDING_GEAR_MEDIUM:
+                buildLandingGearMesh(mesh, primary, secondary, 1.0f);
+                break;
+            case LANDING_GEAR_LARGE:
+                buildLandingGearMesh(mesh, primary, secondary, 1.4f);
+                break;
+
+            // Dockers
+            case DOCKER_STANDARD:
+                buildDockerMesh(mesh, primary, secondary, false);
+                break;
+            case DOCKER_SLIM:
+                buildDockerMesh(mesh, primary, secondary, true);
+                break;
+            case LANDING_BAY:
+                buildLandingBayMesh(mesh, primary, secondary);
+                break;
+
+            // Shield Modules
+            case SHIELD_LIGHT:
+                buildShieldModuleMesh(mesh, primary, secondary, 0.8f);
+                break;
+            case SHIELD_MEDIUM:
+                buildShieldModuleMesh(mesh, primary, secondary, 1.0f);
+                break;
+            case SHIELD_HEAVY:
+                buildShieldModuleMesh(mesh, primary, secondary, 1.3f);
+                break;
+
+            default:
+                // Fallback box for unknown parts
+                mesh.addBox(0, 0, 0, 1f, 1f, 1f, primary);
+                break;
         }
     }
 
@@ -636,6 +713,222 @@ public class ShipPartMeshFactory implements Disposable {
             bar.addBox(0, 0.045f, -0.08f + i * 0.08f, 0.12f, 0.01f, 0.02f, primary);
             mesh.append(bar);
         }
+    }
+
+    // ============== Starfield-Style Part Meshes ==============
+
+    private void buildLargeCockpitMesh(LGMesh mesh, Color primary, Color secondary) {
+        // Larger cockpit with expanded canopy
+        mesh.addTaperedHull(0, 0, 0, 1.4f, 1.0f, 2.0f, 1.6f, 2.5f, primary);
+
+        // Large canopy
+        LGMesh canopy = new LGMesh();
+        canopy.addTaperedHull(0, 0.6f, 0.2f, 1.0f, 0.6f, 1.4f, 0.7f, 1.8f, new Color(0.3f, 0.5f, 0.8f, 0.8f));
+        mesh.append(canopy);
+
+        // Side instrument panels
+        for (int side = -1; side <= 1; side += 2) {
+            LGMesh panel = new LGMesh();
+            panel.addBox(side * 0.9f, 0.2f, 0.5f, 0.15f, 0.4f, 0.6f, secondary);
+            mesh.append(panel);
+        }
+    }
+
+    private void buildHabModuleMesh(LGMesh mesh, ShipPartType type, Color primary, Color secondary) {
+        // Standard hab module body
+        mesh.addBox(0, 0, 0, 2.0f, 1.5f, 2.5f, primary);
+
+        // Windows based on type
+        Color windowColor = new Color(0.3f, 0.5f, 0.7f, 0.7f);
+        
+        switch (type) {
+            case HAB_LIVING_QUARTERS:
+                // Multiple small windows
+                for (int i = 0; i < 3; i++) {
+                    LGMesh window = new LGMesh();
+                    window.addBox(1.01f, 0.3f, -0.8f + i * 0.8f, 0.05f, 0.3f, 0.4f, windowColor);
+                    mesh.append(window);
+                    LGMesh window2 = new LGMesh();
+                    window2.addBox(-1.01f, 0.3f, -0.8f + i * 0.8f, 0.05f, 0.3f, 0.4f, windowColor);
+                    mesh.append(window2);
+                }
+                break;
+            case HAB_MESS_HALL:
+                // Large window
+                LGMesh bigWindow = new LGMesh();
+                bigWindow.addBox(1.01f, 0.2f, 0, 0.05f, 0.6f, 1.5f, windowColor);
+                mesh.append(bigWindow);
+                break;
+            case HAB_SCIENCE_LAB:
+                // Dome on top
+                LGMesh dome = new LGMesh();
+                dome.addCylinder(0, 0.85f, 0, 0.5f, 0.4f, 12, windowColor);
+                mesh.append(dome);
+                break;
+            default:
+                // Standard porthole
+                LGMesh porthole = new LGMesh();
+                porthole.addCylinder(1.01f, 0.2f, 0, 0.2f, 0.05f, 8, windowColor);
+                mesh.append(porthole);
+                break;
+        }
+
+        // Top detail ridge
+        LGMesh ridge = new LGMesh();
+        ridge.addBox(0, 0.76f, 0, 1.8f, 0.05f, 2.3f, secondary);
+        mesh.append(ridge);
+    }
+
+    private void buildReactorMesh(LGMesh mesh, Color primary, Color secondary, float scale) {
+        // Main reactor housing
+        mesh.addCylinder(0, 0, 0, 0.7f * scale, 1.2f * scale, 12, primary);
+
+        // Core glow section
+        Color glowColor = new Color(0.4f, 0.8f, 1.0f, 1f);
+        LGMesh core = new LGMesh();
+        core.addCylinder(0, 0, 0, 0.4f * scale, 0.8f * scale, 8, glowColor);
+        mesh.append(core);
+
+        // Cooling fins
+        for (int i = 0; i < 6; i++) {
+            float angle = i * 60f;
+            LGMesh fin = new LGMesh();
+            fin.addBox(0.8f * scale, 0, 0, 0.05f, 0.3f * scale, 0.8f * scale, secondary);
+            Matrix4 finTransform = new Matrix4().rotate(0, 1, 0, angle);
+            fin.transform(finTransform);
+            mesh.append(fin);
+        }
+
+        // Power conduits
+        for (int side = -1; side <= 1; side += 2) {
+            LGMesh conduit = new LGMesh();
+            conduit.addCylinder(side * 0.5f * scale, 0.7f * scale, 0, 0.08f * scale, 0.3f * scale, 6, secondary);
+            mesh.append(conduit);
+        }
+    }
+
+    private void buildGravDriveMesh(LGMesh mesh, Color primary, Color secondary, float scale) {
+        // Main drive housing
+        mesh.addBox(0, 0, 0, 1.0f * scale, 0.8f * scale, 1.5f * scale, primary);
+
+        // Drive ring
+        Color ringColor = new Color(0.5f, 0.3f, 0.8f, 1f);
+        LGMesh ring = new LGMesh();
+        ring.addCylinder(0, 0, -0.8f * scale, 0.6f * scale, 0.15f * scale, 16, ringColor);
+        mesh.append(ring);
+
+        // Inner ring (darker)
+        LGMesh innerRing = new LGMesh();
+        innerRing.addCylinder(0, 0, -0.8f * scale, 0.4f * scale, 0.2f * scale, 12, secondary);
+        mesh.append(innerRing);
+
+        // Power coupling
+        LGMesh coupling = new LGMesh();
+        coupling.addBox(0, 0.5f * scale, 0.3f * scale, 0.3f * scale, 0.15f * scale, 0.4f * scale, secondary);
+        mesh.append(coupling);
+    }
+
+    private void buildLandingGearMesh(LGMesh mesh, Color primary, Color secondary, float scale) {
+        // Main strut
+        mesh.addCylinder(0, -0.3f * scale, 0, 0.08f * scale, 0.6f * scale, 8, secondary);
+
+        // Shock absorber
+        LGMesh shock = new LGMesh();
+        shock.addCylinder(0, -0.1f * scale, 0, 0.12f * scale, 0.25f * scale, 8, primary);
+        mesh.append(shock);
+
+        // Wheel/Pad
+        LGMesh pad = new LGMesh();
+        pad.addCylinder(0, -0.6f * scale, 0, 0.2f * scale, 0.1f * scale, 12, secondary);
+        mesh.append(pad);
+
+        // Mounting bracket
+        LGMesh mount = new LGMesh();
+        mount.addBox(0, 0.1f * scale, 0, 0.25f * scale, 0.1f * scale, 0.25f * scale, primary);
+        mesh.append(mount);
+    }
+
+    private void buildDockerMesh(LGMesh mesh, Color primary, Color secondary, boolean slim) {
+        float height = slim ? 0.6f : 1.0f;
+        float width = slim ? 0.8f : 1.2f;
+
+        // Docking collar
+        mesh.addCylinder(0, 0, 0, width / 2, height, 12, primary);
+
+        // Inner airlock
+        LGMesh airlock = new LGMesh();
+        airlock.addCylinder(0, 0, 0, width / 2 - 0.1f, height - 0.1f, 10, secondary);
+        mesh.append(airlock);
+
+        // Docking clamps
+        for (int i = 0; i < 4; i++) {
+            float angle = i * 90f + 45f;
+            LGMesh clamp = new LGMesh();
+            clamp.addBox(width / 2 + 0.1f, 0, 0, 0.08f, 0.15f, 0.2f, secondary);
+            Matrix4 clampTransform = new Matrix4().rotate(0, 1, 0, angle);
+            clamp.transform(clampTransform);
+            mesh.append(clamp);
+        }
+
+        // Status lights
+        Color lightColor = new Color(0.2f, 0.9f, 0.3f, 1f);
+        for (int i = 0; i < 4; i++) {
+            float angle = i * 90f;
+            LGMesh light = new LGMesh();
+            light.addCylinder(width / 2 + 0.05f, height / 2, 0, 0.03f, 0.05f, 6, lightColor);
+            Matrix4 lightTransform = new Matrix4().rotate(0, 1, 0, angle);
+            light.transform(lightTransform);
+            mesh.append(light);
+        }
+    }
+
+    private void buildLandingBayMesh(LGMesh mesh, Color primary, Color secondary) {
+        // Main bay structure
+        mesh.addBox(0, 0, 0, 3.0f, 1.5f, 4.0f, primary);
+
+        // Bay door (underneath, open position)
+        LGMesh door = new LGMesh();
+        door.addBox(0, -0.8f, 1.5f, 2.5f, 0.08f, 1.5f, secondary);
+        mesh.append(door);
+
+        // Interior floor
+        LGMesh floor = new LGMesh();
+        floor.addBox(0, -0.6f, 0, 2.6f, 0.05f, 3.5f, secondary);
+        mesh.append(floor);
+
+        // Bay lights
+        Color lightColor = new Color(0.9f, 0.9f, 0.7f, 1f);
+        for (int i = 0; i < 4; i++) {
+            LGMesh light = new LGMesh();
+            light.addCylinder(-1.0f + i * 0.7f, 0.7f, 0, 0.1f, 0.05f, 8, lightColor);
+            mesh.append(light);
+        }
+    }
+
+    private void buildShieldModuleMesh(LGMesh mesh, Color primary, Color secondary, float scale) {
+        // Shield generator base
+        mesh.addHexPrism(0.5f * scale, 0.6f * scale, primary);
+
+        // Emitter array
+        Color emitterColor = new Color(0.3f, 0.7f, 1.0f, 1f);
+        LGMesh emitter = new LGMesh();
+        emitter.addCylinder(0, 0.35f * scale, 0, 0.3f * scale, 0.15f * scale, 12, emitterColor);
+        mesh.append(emitter);
+
+        // Energy coils
+        for (int i = 0; i < 6; i++) {
+            float angle = i * 60f;
+            LGMesh coil = new LGMesh();
+            coil.addCylinder(0.4f * scale, 0, 0, 0.06f * scale, 0.5f * scale, 6, secondary);
+            Matrix4 coilTransform = new Matrix4().rotate(0, 1, 0, angle);
+            coil.transform(coilTransform);
+            mesh.append(coil);
+        }
+
+        // Power indicator
+        LGMesh indicator = new LGMesh();
+        indicator.addCylinder(0, 0.5f * scale, 0, 0.08f * scale, 0.1f * scale, 8, emitterColor);
+        mesh.append(indicator);
     }
 
     @Override

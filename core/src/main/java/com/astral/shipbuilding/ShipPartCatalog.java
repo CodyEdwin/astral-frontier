@@ -427,6 +427,327 @@ public class ShipPartCatalog {
                 new String[] { "Cosmetic" }
             )
         );
+
+        // ============== STARFIELD-STYLE PARTS ==============
+
+        // Large Cockpit
+        addPart(
+            ShipPartType.HULL_COCKPIT_LARGE,
+            new PartCatalogEntry(
+                ShipPartType.HULL_COCKPIT_LARGE,
+                "Large Cockpit",
+                "Spacious cockpit with crew seating for 4.",
+                12000,
+                2,
+                new PartStats(800, 70, 0, 0, 0, 4, 0),
+                new String[] { "Required", "Command Center" }
+            )
+        );
+
+        // ============== HABITATION MODULES ==============
+        addPart(
+            ShipPartType.HAB_LIVING_QUARTERS,
+            new PartCatalogEntry(
+                ShipPartType.HAB_LIVING_QUARTERS,
+                "Living Quarters",
+                "Comfortable crew quarters with bunks for 4.",
+                8000,
+                1,
+                new PartStats(400, 50, 0, 0, 0, 4, 0),
+                new String[] { "Hab", "Crew" }
+            )
+        );
+
+        addPart(
+            ShipPartType.HAB_MESS_HALL,
+            new PartCatalogEntry(
+                ShipPartType.HAB_MESS_HALL,
+                "Mess Hall",
+                "Dining area and crew recreation space.",
+                6000,
+                1,
+                new PartStats(350, 40, 0, 0, 0, 2, 0),
+                new String[] { "Hab", "Morale" }
+            )
+        );
+
+        addPart(
+            ShipPartType.HAB_CAPTAIN_QUARTERS,
+            new PartCatalogEntry(
+                ShipPartType.HAB_CAPTAIN_QUARTERS,
+                "Captain's Quarters",
+                "Private quarters for the ship captain.",
+                10000,
+                2,
+                new PartStats(300, 35, 0, 0, 0, 1, 0),
+                new String[] { "Hab", "Command" }
+            )
+        );
+
+        addPart(
+            ShipPartType.HAB_CREW_STATION,
+            new PartCatalogEntry(
+                ShipPartType.HAB_CREW_STATION,
+                "Crew Station",
+                "Workstation area for crew operations.",
+                5000,
+                1,
+                new PartStats(350, 30, 0, 0, 0, 2, 0),
+                new String[] { "Hab", "Operations" }
+            )
+        );
+
+        addPart(
+            ShipPartType.HAB_ARMORY,
+            new PartCatalogEntry(
+                ShipPartType.HAB_ARMORY,
+                "Armory",
+                "Weapon storage and maintenance facility.",
+                7500,
+                2,
+                new PartStats(450, 60, 0, 0, 0, 1, 50),
+                new String[] { "Hab", "Combat" }
+            )
+        );
+
+        addPart(
+            ShipPartType.HAB_WORKSHOP,
+            new PartCatalogEntry(
+                ShipPartType.HAB_WORKSHOP,
+                "Workshop",
+                "Engineering workshop for repairs and crafting.",
+                9000,
+                2,
+                new PartStats(500, 45, 0, 0, 0, 1, 30),
+                new String[] { "Hab", "Engineering" }
+            )
+        );
+
+        addPart(
+            ShipPartType.HAB_SCIENCE_LAB,
+            new PartCatalogEntry(
+                ShipPartType.HAB_SCIENCE_LAB,
+                "Science Lab",
+                "Research laboratory for scientific analysis.",
+                12000,
+                3,
+                new PartStats(450, 40, 0, 0, 0, 1, 20),
+                new String[] { "Hab", "Science" }
+            )
+        );
+
+        addPart(
+            ShipPartType.HAB_INFIRMARY,
+            new PartCatalogEntry(
+                ShipPartType.HAB_INFIRMARY,
+                "Infirmary",
+                "Medical bay for treating injuries.",
+                8500,
+                2,
+                new PartStats(400, 35, 0, 0, 0, 1, 0),
+                new String[] { "Hab", "Medical" }
+            )
+        );
+
+        // ============== REACTORS ==============
+        addPart(
+            ShipPartType.REACTOR_CLASS_A,
+            new PartCatalogEntry(
+                ShipPartType.REACTOR_CLASS_A,
+                "Class A Reactor",
+                "Light reactor for small ships. 12 power units. Max mass: 20,000 kg.",
+                15000,
+                1,
+                new PartStats(800, 30, 0, 0, 0, 0, 0),
+                new String[] { "Required", "Power", "Class A" }
+            )
+        );
+
+        addPart(
+            ShipPartType.REACTOR_CLASS_B,
+            new PartCatalogEntry(
+                ShipPartType.REACTOR_CLASS_B,
+                "Class B Reactor",
+                "Medium reactor for versatile ships. 24 power units. Max mass: 50,000 kg.",
+                35000,
+                2,
+                new PartStats(1500, 50, 0, 0, 0, 0, 0),
+                new String[] { "Required", "Power", "Class B" }
+            )
+        );
+
+        addPart(
+            ShipPartType.REACTOR_CLASS_C,
+            new PartCatalogEntry(
+                ShipPartType.REACTOR_CLASS_C,
+                "Class C Reactor",
+                "Heavy reactor for capital ships. 36 power units. Max mass: 100,000 kg.",
+                75000,
+                3,
+                new PartStats(2500, 80, 0, 0, 0, 0, 0),
+                new String[] { "Required", "Power", "Class C" }
+            )
+        );
+
+        // ============== GRAV DRIVES ==============
+        addPart(
+            ShipPartType.GRAV_DRIVE_BASIC,
+            new PartCatalogEntry(
+                ShipPartType.GRAV_DRIVE_BASIC,
+                "Basic Grav Drive",
+                "Standard FTL drive. 15 LY jump range.",
+                20000,
+                1,
+                new PartStats(600, 20, 0, 0, 0, 0, 0),
+                new String[] { "Required", "FTL" }
+            )
+        );
+
+        addPart(
+            ShipPartType.GRAV_DRIVE_ADVANCED,
+            new PartCatalogEntry(
+                ShipPartType.GRAV_DRIVE_ADVANCED,
+                "Advanced Grav Drive",
+                "Enhanced FTL drive. 25 LY jump range.",
+                45000,
+                2,
+                new PartStats(800, 25, 0, 0, 0, 0, 0),
+                new String[] { "Required", "FTL", "Advanced" }
+            )
+        );
+
+        addPart(
+            ShipPartType.GRAV_DRIVE_MILITARY,
+            new PartCatalogEntry(
+                ShipPartType.GRAV_DRIVE_MILITARY,
+                "Military Grav Drive",
+                "Military-grade FTL. 30 LY jump range.",
+                80000,
+                3,
+                new PartStats(1000, 30, 0, 0, 0, 0, 0),
+                new String[] { "Required", "FTL", "Military" }
+            )
+        );
+
+        // ============== LANDING GEAR ==============
+        addPart(
+            ShipPartType.LANDING_GEAR_SMALL,
+            new PartCatalogEntry(
+                ShipPartType.LANDING_GEAR_SMALL,
+                "Small Landing Gear",
+                "Retractable landing gear for light ships.",
+                2000,
+                1,
+                new PartStats(100, 10, 0, 0, 0, 0, 0),
+                new String[] { "Required", "Landing" }
+            )
+        );
+
+        addPart(
+            ShipPartType.LANDING_GEAR_MEDIUM,
+            new PartCatalogEntry(
+                ShipPartType.LANDING_GEAR_MEDIUM,
+                "Medium Landing Gear",
+                "Standard landing gear for medium ships.",
+                3500,
+                2,
+                new PartStats(150, 15, 0, 0, 0, 0, 0),
+                new String[] { "Required", "Landing" }
+            )
+        );
+
+        addPart(
+            ShipPartType.LANDING_GEAR_LARGE,
+            new PartCatalogEntry(
+                ShipPartType.LANDING_GEAR_LARGE,
+                "Large Landing Gear",
+                "Heavy-duty landing gear for capital ships.",
+                6000,
+                3,
+                new PartStats(250, 25, 0, 0, 0, 0, 0),
+                new String[] { "Required", "Landing" }
+            )
+        );
+
+        // ============== DOCKERS ==============
+        addPart(
+            ShipPartType.DOCKER_STANDARD,
+            new PartCatalogEntry(
+                ShipPartType.DOCKER_STANDARD,
+                "Standard Docker",
+                "Standard docking port for station access.",
+                4000,
+                1,
+                new PartStats(200, 20, 0, 0, 0, 0, 0),
+                new String[] { "Docking" }
+            )
+        );
+
+        addPart(
+            ShipPartType.DOCKER_SLIM,
+            new PartCatalogEntry(
+                ShipPartType.DOCKER_SLIM,
+                "Slim Docker",
+                "Compact bottom-mounted docking port.",
+                3500,
+                1,
+                new PartStats(150, 15, 0, 0, 0, 0, 0),
+                new String[] { "Docking" }
+            )
+        );
+
+        addPart(
+            ShipPartType.LANDING_BAY,
+            new PartCatalogEntry(
+                ShipPartType.LANDING_BAY,
+                "Landing Bay",
+                "Internal bay for small craft.",
+                25000,
+                3,
+                new PartStats(500, 40, 0, 0, 0, 0, 0),
+                new String[] { "Docking", "Hangar" }
+            )
+        );
+
+        // ============== SHIELD MODULES ==============
+        addPart(
+            ShipPartType.SHIELD_LIGHT,
+            new PartCatalogEntry(
+                ShipPartType.SHIELD_LIGHT,
+                "Light Shield Generator",
+                "Basic energy shield. 100 shield HP.",
+                8000,
+                1,
+                new PartStats(300, 0, 100, 0, 0, 0, 0),
+                new String[] { "Defense", "Shield" }
+            )
+        );
+
+        addPart(
+            ShipPartType.SHIELD_MEDIUM,
+            new PartCatalogEntry(
+                ShipPartType.SHIELD_MEDIUM,
+                "Medium Shield Generator",
+                "Enhanced energy shield. 200 shield HP.",
+                18000,
+                2,
+                new PartStats(500, 0, 200, 0, 0, 0, 0),
+                new String[] { "Defense", "Shield" }
+            )
+        );
+
+        addPart(
+            ShipPartType.SHIELD_HEAVY,
+            new PartCatalogEntry(
+                ShipPartType.SHIELD_HEAVY,
+                "Heavy Shield Generator",
+                "Military-grade shield. 350 shield HP.",
+                35000,
+                3,
+                new PartStats(800, 0, 350, 0, 0, 0, 0),
+                new String[] { "Defense", "Shield", "Military" }
+            )
+        );
     }
 
     /**

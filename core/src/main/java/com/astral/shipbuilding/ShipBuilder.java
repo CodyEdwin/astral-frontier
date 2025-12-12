@@ -29,6 +29,11 @@ public class ShipBuilder implements Disposable {
     private float totalShield;
     private float totalThrust;
     private float totalFuel;
+    private int totalCrew;
+    private float totalCargo;
+    private float maxJumpRange;
+    private int totalPowerGeneration;
+    private int totalPowerConsumption;
 
     // Validation state
     private boolean validationDirty = true;
@@ -70,6 +75,11 @@ public class ShipBuilder implements Disposable {
         totalShield = 0;
         totalThrust = 0;
         totalFuel = 0;
+        totalCrew = 0;
+        totalCargo = 0;
+        maxJumpRange = 0;
+        totalPowerGeneration = 0;
+        totalPowerConsumption = 0;
         validationDirty = true;
         return this;
     }
@@ -168,6 +178,13 @@ public class ShipBuilder implements Disposable {
         totalShield += part.getShieldContribution();
         totalThrust += part.getThrustContribution();
         totalFuel += part.getFuelCapacity();
+        totalCrew += part.getCrewCapacity();
+        totalCargo += part.getCargoCapacity();
+        totalPowerGeneration += part.getPowerGeneration();
+        totalPowerConsumption += part.getPowerConsumption();
+        if (part.getJumpRange() > maxJumpRange) {
+            maxJumpRange = part.getJumpRange();
+        }
     }
 
     /**
@@ -756,6 +773,26 @@ public class ShipBuilder implements Disposable {
 
     public float getTotalFuel() {
         return totalFuel;
+    }
+
+    public int getTotalCrew() {
+        return totalCrew;
+    }
+
+    public float getTotalCargo() {
+        return totalCargo;
+    }
+
+    public float getMaxJumpRange() {
+        return maxJumpRange;
+    }
+
+    public int getTotalPowerGeneration() {
+        return totalPowerGeneration;
+    }
+
+    public int getTotalPowerConsumption() {
+        return totalPowerConsumption;
     }
 
     public ShipValidator getValidator() {

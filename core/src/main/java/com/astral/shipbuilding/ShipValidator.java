@@ -145,7 +145,7 @@ public class ShipValidator {
     }
 
     /**
-     * Check for required parts
+     * Check for required parts (Starfield-style requirements)
      */
     private void checkRequiredParts() {
         Array<ShipPart> parts = shipBuilder.getParts();
@@ -155,33 +155,71 @@ public class ShipValidator {
         boolean hasEngine = false;
         boolean hasGravDrive = false;
         boolean hasFuelTank = false;
-        boolean hasLandingGear = false;
+        int landingGearCount = 0;
 
         for (ShipPart part : parts) {
             ShipPartType type = part.getType();
 
-            if (type == ShipPartType.HULL_COCKPIT) hasCockpit = true;
+            // Check for cockpit (any type)
+            if (type == ShipPartType.HULL_COCKPIT || type == ShipPartType.HULL_COCKPIT_LARGE) {
+                hasCockpit = true;
+            }
 
-            // For now, we assume certain part types are required
-            // In a full implementation, these would be separate part categories
-            if (type.getCategory() == ShipPartType.PartCategory.ENGINE) hasEngine = true;
-            if (type.getCategory() == ShipPartType.PartCategory.UTILITY) {
-                if (type.getDisplayName().contains("Fuel")) hasFuelTank = true;
+            // Check for reactor
+            if (type.getCategory() == ShipPartType.PartCategory.REACTOR) {
+                hasReactor = true;
+            }
+
+            // Check for engine
+            if (type.getCategory() == ShipPartType.PartCategory.ENGINE) {
+                hasEngine = true;
+            }
+
+            // Check for grav drive
+            if (type.getCategory() == ShipPartType.PartCategory.GRAV_DRIVE) {
+                hasGravDrive = true;
+            }
+
+            // Check for fuel tank
+            if (type == ShipPartType.UTIL_FUEL_TANK) {
+                hasFuelTank = true;
+            }
+
+            // Count landing gear
+            if (type.getCategory() == ShipPartType.PartCategory.LANDING_GEAR) {
+                landingGearCount++;
             }
         }
 
-        // Always require cockpit and engine at minimum
+        // Critical errors - ship cannot fly without these
         if (!hasCockpit) {
             errors.add(new ValidationError(ErrorType.MISSING_COCKPIT));
+        }
+
+        if (!hasReactor) {
+            errors.add(new ValidationError(ErrorType.MISSING_REACTOR));
         }
 
         if (!hasEngine) {
             errors.add(new ValidationError(ErrorType.MISSING_ENGINE));
         }
 
+        if (!hasGravDrive) {
+            errors.add(new ValidationError(ErrorType.MISSING_GRAV_DRIVE));
+        }
+
+        // Landing gear requirement (need at least 3 for stability)
+        if (landingGearCount == 0) {
+            errors.add(new ValidationError(ErrorType.MISSING_LANDING_GEAR));
+        } else if (landingGearCount < 3) {
+            errors.add(new ValidationError(ErrorType.INSUFFICIENT_LANDING_GEAR,
+                "Need at least 3 landing gear (have " + landingGearCount + ")"));
+        }
+
         // Warnings for missing but not critical parts
         if (!hasFuelTank) {
-            warnings.add(new ValidationWarning(WarningType.LOW_FUEL_CAPACITY));
+            warnings.add(new ValidationWarning(WarningType.LOW_FUEL_CAPACITY,
+                "No external fuel tanks - limited range"));
         }
     }
 
@@ -192,18 +230,41 @@ public class ShipValidator {
         Array<ShipPart> parts = shipBuilder.getParts();
 
         int cockpitCount = 0;
+        int reactorCount = 0;
+        int gravDriveCount = 0;
         int shieldGenCount = 0;
 
         for (ShipPart part : parts) {
             ShipPartType type = part.getType();
 
-            if (type == ShipPartType.HULL_COCKPIT) cockpitCount++;
-            if (type == ShipPartType.UTIL_SHIELD_GENERATOR) shieldGenCount++;
+            if (type == ShipPartType.HULL_COCKPIT || type == ShipPartType.HULL_COCKPIT_LARGE) {
+                cockpitCount++;
+            }
+            if (type.getCategory() == ShipPartType.PartCategory.REACTOR) {
+                reactorCount++;
+            }
+            if (type.getCategory() == ShipPartType.PartCategory.GRAV_DRIVE) {
+                gravDriveCount++;
+            }
+            if (type.getCategory() == ShipPartType.PartCategory.SHIELD || 
+                type == ShipPartType.UTIL_SHIELD_GENERATOR) {
+                shieldGenCount++;
+            }
         }
 
         if (cockpitCount > 1) {
             errors.add(new ValidationError(ErrorType.MULTIPLE_COCKPITS,
                 "Found " + cockpitCount + " cockpits"));
+        }
+
+        if (reactorCount > 1) {
+            errors.add(new ValidationError(ErrorType.MULTIPLE_REACTORS,
+                "Found " + reactorCount + " reactors"));
+        }
+
+        if (gravDriveCount > 1) {
+            errors.add(new ValidationError(ErrorType.MULTIPLE_GRAV_DRIVES,
+                "Found " + gravDriveCount + " grav drives"));
         }
 
         if (shieldGenCount > 1) {

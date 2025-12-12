@@ -43,6 +43,11 @@ public class ShipPart implements Disposable {
     private float shieldContribution;
     private float thrustContribution;
     private float fuelCapacity;
+    private int crewCapacity;
+    private int powerGeneration;
+    private int powerConsumption;
+    private float jumpRange;
+    private float cargoCapacity;
 
     public ShipPart(ShipPartType type) {
         this.type = type;
@@ -67,6 +72,119 @@ public class ShipPart implements Disposable {
             case HULL:
                 massContribution = 500f;
                 hullContribution = 100f;
+                if (type == ShipPartType.HULL_COCKPIT) {
+                    crewCapacity = 2;
+                } else if (type == ShipPartType.HULL_COCKPIT_LARGE) {
+                    crewCapacity = 4;
+                    massContribution = 800f;
+                }
+                break;
+            case HAB:
+                massContribution = 400f;
+                hullContribution = 50f;
+                switch (type) {
+                    case HAB_LIVING_QUARTERS:
+                        crewCapacity = 4;
+                        break;
+                    case HAB_MESS_HALL:
+                        crewCapacity = 2;
+                        break;
+                    case HAB_CAPTAIN_QUARTERS:
+                        crewCapacity = 1;
+                        massContribution = 300f;
+                        break;
+                    case HAB_CREW_STATION:
+                        crewCapacity = 2;
+                        massContribution = 350f;
+                        break;
+                    case HAB_ARMORY:
+                    case HAB_WORKSHOP:
+                    case HAB_SCIENCE_LAB:
+                    case HAB_INFIRMARY:
+                        crewCapacity = 1;
+                        massContribution = 450f;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case REACTOR:
+                massContribution = 1000f;
+                hullContribution = 30f;
+                switch (type) {
+                    case REACTOR_CLASS_A:
+                        powerGeneration = 12;
+                        massContribution = 800f;
+                        break;
+                    case REACTOR_CLASS_B:
+                        powerGeneration = 24;
+                        massContribution = 1500f;
+                        break;
+                    case REACTOR_CLASS_C:
+                        powerGeneration = 36;
+                        massContribution = 2500f;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case GRAV_DRIVE:
+                massContribution = 600f;
+                powerConsumption = 3;
+                switch (type) {
+                    case GRAV_DRIVE_BASIC:
+                        jumpRange = 15f;
+                        break;
+                    case GRAV_DRIVE_ADVANCED:
+                        jumpRange = 25f;
+                        massContribution = 800f;
+                        powerConsumption = 4;
+                        break;
+                    case GRAV_DRIVE_MILITARY:
+                        jumpRange = 30f;
+                        massContribution = 1000f;
+                        powerConsumption = 5;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case LANDING_GEAR:
+                massContribution = 100f;
+                if (type == ShipPartType.LANDING_GEAR_MEDIUM) {
+                    massContribution = 150f;
+                } else if (type == ShipPartType.LANDING_GEAR_LARGE) {
+                    massContribution = 250f;
+                }
+                break;
+            case DOCKER:
+                massContribution = 200f;
+                hullContribution = 20f;
+                if (type == ShipPartType.LANDING_BAY) {
+                    massContribution = 500f;
+                    hullContribution = 40f;
+                }
+                break;
+            case SHIELD:
+                massContribution = 300f;
+                powerConsumption = 2;
+                switch (type) {
+                    case SHIELD_LIGHT:
+                        shieldContribution = 100f;
+                        break;
+                    case SHIELD_MEDIUM:
+                        shieldContribution = 200f;
+                        massContribution = 500f;
+                        powerConsumption = 3;
+                        break;
+                    case SHIELD_HEAVY:
+                        shieldContribution = 350f;
+                        massContribution = 800f;
+                        powerConsumption = 5;
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case WING:
                 massContribution = 100f;
@@ -74,18 +192,40 @@ public class ShipPart implements Disposable {
                 break;
             case ENGINE:
                 massContribution = 200f;
+                powerConsumption = 2;
                 thrustContribution = type == ShipPartType.ENGINE_LARGE ? 150000f :
                                      type == ShipPartType.ENGINE_MEDIUM ? 80000f : 40000f;
+                if (type == ShipPartType.ENGINE_LARGE) powerConsumption = 4;
+                else if (type == ShipPartType.ENGINE_MEDIUM) powerConsumption = 3;
                 break;
             case WEAPON:
                 massContribution = 50f;
+                powerConsumption = 1;
+                if (type == ShipPartType.WEAPON_MOUNT_LARGE) {
+                    massContribution = 100f;
+                    powerConsumption = 3;
+                } else if (type == ShipPartType.WEAPON_MOUNT_MEDIUM) {
+                    massContribution = 75f;
+                    powerConsumption = 2;
+                } else if (type == ShipPartType.WEAPON_TURRET) {
+                    massContribution = 120f;
+                    powerConsumption = 2;
+                } else if (type == ShipPartType.WEAPON_MISSILE_POD) {
+                    massContribution = 80f;
+                    powerConsumption = 1;
+                }
                 break;
             case UTILITY:
                 massContribution = 30f;
                 if (type == ShipPartType.UTIL_SHIELD_GENERATOR) {
                     shieldContribution = 100f;
+                    powerConsumption = 2;
                 } else if (type == ShipPartType.UTIL_FUEL_TANK) {
                     fuelCapacity = 200f;
+                    massContribution = 100f;
+                } else if (type == ShipPartType.UTIL_CARGO_POD) {
+                    cargoCapacity = 100f;
+                    massContribution = 150f;
                 }
                 break;
             case STRUCTURAL:
@@ -222,6 +362,11 @@ public class ShipPart implements Disposable {
     public float getShieldContribution() { return shieldContribution; }
     public float getThrustContribution() { return thrustContribution; }
     public float getFuelCapacity() { return fuelCapacity; }
+    public int getCrewCapacity() { return crewCapacity; }
+    public int getPowerGeneration() { return powerGeneration; }
+    public int getPowerConsumption() { return powerConsumption; }
+    public float getJumpRange() { return jumpRange; }
+    public float getCargoCapacity() { return cargoCapacity; }
 
     public Array<AttachmentPoint> getAttachmentPoints() { return attachmentPoints; }
     public ShipPart getParentPart() { return parentPart; }
