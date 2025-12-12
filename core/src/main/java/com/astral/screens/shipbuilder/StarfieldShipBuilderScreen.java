@@ -61,7 +61,7 @@ public class StarfieldShipBuilderScreen implements Screen {
     private int scrollOffset = 0;
 
     // Camera controls
-    private float cameraDistance = 35f;
+    private float cameraDistance = 15f;
     private float cameraYaw = 45f;
     private float cameraPitch = 25f;
     private Vector3 cameraTarget = new Vector3(0, 0, 0);
@@ -139,16 +139,17 @@ public class StarfieldShipBuilderScreen implements Screen {
     private void buildStarterShip() {
         shipBuilder.clear();
         
-        // Minimal flyable ship
-        shipBuilder.addPart(ShipPartType.HULL_COCKPIT, 0, 0, 2);
-        shipBuilder.addPart(ShipPartType.HULL_MID, 0, 0, 0);
-        shipBuilder.addPart(ShipPartType.HULL_AFT, 0, 0, -2);
-        shipBuilder.addPart(ShipPartType.REACTOR_CLASS_A, 0, -0.5f, -1);
-        shipBuilder.addPart(ShipPartType.GRAV_DRIVE_BASIC, 0, 0, -3);
-        shipBuilder.addPart(ShipPartType.ENGINE_SMALL, 0, 0, -4);
-        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, -1, -1, 0);
-        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 1, -1, 0);
-        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 0, -1, -2);
+        // Minimal flyable ship - scaled down for builder view (0.3 scale)
+        float s = 0.3f;
+        shipBuilder.addPart(ShipPartType.HULL_COCKPIT, 0, 0, 3*s, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.HULL_MID, 0, 0, 0, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.HULL_AFT, 0, 0, -3*s, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.REACTOR_CLASS_A, 0, -0.3f, -1*s, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.GRAV_DRIVE_BASIC, 0, 0, -5*s, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.ENGINE_SMALL, 0, 0, -7*s, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, -1*s, -0.5f, 0, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 1*s, -0.5f, 0, 0, 0, 0, s, false);
+        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 0, -0.5f, -4*s, 0, 0, 0, s, false);
 
         updatePowerSystem();
     }
