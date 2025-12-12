@@ -331,7 +331,6 @@ public class StarfieldShipBuilderScreen implements Screen {
                 }
                 break;
             case Input.Keys.BACKSPACE:
-            case Input.Keys.DEL:
                 removeLastPart();
                 break;
             case Input.Keys.C:
@@ -538,28 +537,9 @@ public class StarfieldShipBuilderScreen implements Screen {
     }
 
     private void drawSnapPoint(Vector3 pos, float size) {
-        // Draw a diamond/rhombus shape for snap points
+        // Draw a simple box for snap points (ShapeRenderer.triangle is 2D only)
         float hs = size / 2;
-        shapeRenderer.triangle(
-            pos.x, pos.y + hs, pos.z,
-            pos.x + hs, pos.y, pos.z,
-            pos.x, pos.y, pos.z + hs
-        );
-        shapeRenderer.triangle(
-            pos.x, pos.y + hs, pos.z,
-            pos.x, pos.y, pos.z + hs,
-            pos.x - hs, pos.y, pos.z
-        );
-        shapeRenderer.triangle(
-            pos.x, pos.y + hs, pos.z,
-            pos.x - hs, pos.y, pos.z,
-            pos.x, pos.y, pos.z - hs
-        );
-        shapeRenderer.triangle(
-            pos.x, pos.y + hs, pos.z,
-            pos.x, pos.y, pos.z - hs,
-            pos.x + hs, pos.y, pos.z
-        );
+        shapeRenderer.box(pos.x - hs, pos.y - hs, pos.z + hs, size, size, size);
     }
 
     private void drawBox(Vector3 center, float w, float h, float d) {
