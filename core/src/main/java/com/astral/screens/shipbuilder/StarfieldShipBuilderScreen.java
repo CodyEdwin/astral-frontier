@@ -72,6 +72,8 @@ public class StarfieldShipBuilderScreen implements Screen {
     private Vector3 ghostPosition = new Vector3(0, 0, 0);
     private boolean placingPart = false;
     private ShipBuilder.SnapPoint nearestSnap = null;
+    private ModelInstance ghostModelInstance = null;
+    private ShipPartMeshFactory meshFactory;
 
     // Input state
     private int mouseX, mouseY;
@@ -126,6 +128,7 @@ public class StarfieldShipBuilderScreen implements Screen {
 
         // Initialize ship builder
         catalog = ShipPartCatalog.getInstance();
+        meshFactory = new ShipPartMeshFactory();
         shipBuilder = new ShipBuilder();
         powerSystem = new ShipPowerSystem();
 
@@ -275,6 +278,7 @@ public class StarfieldShipBuilderScreen implements Screen {
                 if (placingPart) {
                     placingPart = false;
                     selectedPartType = null;
+                    ghostModelInstance = null;
                 } else {
                     game.setScreen(returnScreen);
                 }
@@ -413,7 +417,19 @@ public class StarfieldShipBuilderScreen implements Screen {
             if (entry.cost <= credits) {
                 selectedPartType = entry.type;
                 placingPart = true;
-                ghostPosition.set(0, 0, 0);
+                
+                // Create ghost model for preview
+                Model ghostModel = meshFactory.createPartModel(selectedPartType, 
+                    new Color(0.3f, 0.9f, 0.5f, 0.6f),  // Green tint
+                    new Color(0.2f, 0.7f, 0.3f, 0.6f), 0);
+                ghostModelInstance = new ModelInstance(ghostModel);
+                
+                // Start at nearest snap point or center
+                if (nearestSnap != null) {
+                    ghostPosition.set(nearestSnap.position);
+                } else {
+                    ghostPosition.set(0, 0, 0);
+                }
             }
         }
     }
@@ -442,6 +458,7 @@ public class StarfieldShipBuilderScreen implements Screen {
 
         placingPart = false;
         selectedPartType = null;
+        ghostModelInstance = null;
     }
 
     private void removeLastPart() {
@@ -480,8 +497,12 @@ public class StarfieldShipBuilderScreen implements Screen {
             return;
         }
 
-        // Find nearest snap point
+        // Find nearest snap point and auto-snap like Starfield
         nearestSnap = shipBuilder.findNearestSnapPoint(ghostPosition);
+        if (nearestSnap != null && ghostPosition.dst(nearestSnap.position) < 3f) {
+            // Smoothly interpolate to snap point
+            ghostPosition.lerp(nearestSnap.position, 0.3f);
+        }
     }
 
     @Override
@@ -526,13 +547,18 @@ public class StarfieldShipBuilderScreen implements Screen {
             drawSnapPoint(snap.position, size);
         }
 
-        // Draw ghost part position
-        if (placingPart) {
-            shapeRenderer.setColor(0.3f, 0.9f, 0.4f, 0.4f);
-            drawBox(ghostPosition, 1.5f, 1f, 2f);
-        }
-
         shapeRenderer.end();
+
+        // Draw ghost part as actual model with transparency
+        if (placingPart && ghostModelInstance != null) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.blendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            ghostModelInstance.transform.setToTranslation(ghostPosition);
+            modelBatch.begin(camera);
+            modelBatch.render(ghostModelInstance, environment);
+            modelBatch.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+        }
         Gdx.gl.glDisable(GL20.GL_BLEND);
         Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
 
