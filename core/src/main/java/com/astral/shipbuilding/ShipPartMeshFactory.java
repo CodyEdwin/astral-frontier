@@ -37,47 +37,18 @@ public class ShipPartMeshFactory implements Disposable {
             return modelCache.get(cacheKey);
         }
 
-        // Use LibGDX ModelBuilder for reliable 3D rendering
-        ModelBuilder modelBuilder = new ModelBuilder();
-        Material material = new Material(ColorAttribute.createDiffuse(primary));
-        long attrs = VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal;
-        
-        Model model;
-        switch (type.getCategory()) {
-            case HULL:
-                // Box-based hull sections
-                model = modelBuilder.createBox(2f, 1.5f, 3f, material, attrs);
-                break;
-            case ENGINE:
-                // Cylinder engines
-                model = modelBuilder.createCylinder(1f, 2f, 1f, 12, material, attrs);
-                break;
-            case REACTOR:
-                // Reactor cube
-                model = modelBuilder.createBox(1.5f, 1f, 2f, material, attrs);
-                break;
-            case GRAV_DRIVE:
-                // Sphere grav drive
-                model = modelBuilder.createSphere(1.5f, 1.5f, 1.5f, 12, 12, material, attrs);
-                break;
-            case LANDING_GEAR:
-                // Small cylinder
-                model = modelBuilder.createCylinder(0.3f, 1f, 0.3f, 8, material, attrs);
-                break;
-            case WING:
-                // Flat box for wings
-                model = modelBuilder.createBox(3f, 0.2f, 1.5f, material, attrs);
-                break;
-            case SHIELD:
-                // Sphere shield
-                model = modelBuilder.createSphere(1f, 1f, 1f, 10, 10, material, attrs);
-                break;
-            default:
-                model = modelBuilder.createBox(1f, 1f, 1f, material, attrs);
-                break;
-        }
-        
+        // Build detailed mesh geometry
+        LGMesh mesh = new LGMesh();
+        buildPartMesh(mesh, type, primary, secondary, variant);
+
+        // Create material with vertex colors
+        Material material = new Material(
+            ColorAttribute.createDiffuse(Color.WHITE)
+        );
+
+        Model model = mesh.buildModel(material, type.name().toLowerCase());
         modelCache.put(cacheKey, model);
+
         return model;
     }
 
