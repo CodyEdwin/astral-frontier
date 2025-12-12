@@ -61,7 +61,7 @@ public class StarfieldShipBuilderScreen implements Screen {
     private int scrollOffset = 0;
 
     // Camera controls
-    private float cameraDistance = 25f;
+    private float cameraDistance = 50f;
     private float cameraYaw = 45f;
     private float cameraPitch = 25f;
     private Vector3 cameraTarget = new Vector3(0, 0, 0);
@@ -139,16 +139,16 @@ public class StarfieldShipBuilderScreen implements Screen {
     private void buildStarterShip() {
         shipBuilder.clear();
         
-        // Minimal flyable ship - use smaller spacing, default scale
-        shipBuilder.addPart(ShipPartType.HULL_COCKPIT, 0, 0, 1.5f);
-        shipBuilder.addPart(ShipPartType.HULL_MID, 0, 0, 0);
-        shipBuilder.addPart(ShipPartType.HULL_AFT, 0, 0, -1.5f);
-        shipBuilder.addPart(ShipPartType.REACTOR_CLASS_A, 0, -0.5f, -0.5f);
-        shipBuilder.addPart(ShipPartType.GRAV_DRIVE_BASIC, 0, 0, -2.5f);
-        shipBuilder.addPart(ShipPartType.ENGINE_SMALL, 0, 0, -3.5f);
-        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, -0.5f, -1f, 0.5f);
-        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 0.5f, -1f, 0.5f);
-        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 0, -1f, -2f);
+        // Minimal flyable ship with proper spacing (parts are ~2-3 units long)
+        shipBuilder.addPart(ShipPartType.HULL_COCKPIT, 0, 0, 6f);    // Front
+        shipBuilder.addPart(ShipPartType.HULL_MID, 0, 0, 2f);        // Center
+        shipBuilder.addPart(ShipPartType.HULL_AFT, 0, 0, -2f);       // Aft
+        shipBuilder.addPart(ShipPartType.REACTOR_CLASS_A, 0, -1f, 0); // Below center
+        shipBuilder.addPart(ShipPartType.GRAV_DRIVE_BASIC, 0, 0, -5f); // Behind aft
+        shipBuilder.addPart(ShipPartType.ENGINE_SMALL, 0, 0, -8f);   // Rear engine
+        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, -2f, -2f, 3f);  // Front left gear
+        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 2f, -2f, 3f);   // Front right gear
+        shipBuilder.addPart(ShipPartType.LANDING_GEAR_SMALL, 0, -2f, -4f);   // Rear gear
 
         updatePowerSystem();
     }
@@ -250,7 +250,7 @@ public class StarfieldShipBuilderScreen implements Screen {
                 } else {
                     // Zoom camera
                     cameraDistance += amountY * 3f;
-                    cameraDistance = MathUtils.clamp(cameraDistance, 15f, 120f);
+                    cameraDistance = MathUtils.clamp(cameraDistance, 20f, 200f);
                     updateCamera();
                 }
                 return true;
