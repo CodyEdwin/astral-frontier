@@ -1,7 +1,6 @@
 plugins {
-    //id("com.android.application")
-    android version "8.2.0" apply true
-    //eclipse
+    id("com.android.application") version "8.2.0" apply true
+    //id("org.jetbrains.kotlin.android") version "1.9.0" apply true // uncomment if using Kotlin
 }
 
 val gdxVersion: String by project
