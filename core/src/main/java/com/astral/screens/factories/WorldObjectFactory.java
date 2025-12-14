@@ -70,9 +70,10 @@ public class WorldObjectFactory implements Disposable {
      */
     public Entity createPlanet(World world, Vector3 position, float radius, Color color, String name,
                                TransitionManager transitionManager) {
-        planetModel = modelBuilder.createSphere(radius * 2, radius * 2, radius * 2, 32, 32,
+        Model model = modelBuilder.createSphere(radius * 2, radius * 2, radius * 2, 32, 32,
                 new Material(ColorAttribute.createDiffuse(color)),
                 Usage.Position | Usage.Normal);
+        createdModels.add(model);
 
         Entity planet = world.createEntity();
         planet.setTag("Planet");
@@ -82,7 +83,7 @@ public class WorldObjectFactory implements Disposable {
         planet.add(transform);
 
         RenderComponent render = new RenderComponent();
-        render.setModel(new ModelInstance(planetModel));
+        render.setModel(new ModelInstance(model));
         planet.add(render);
 
         world.processPending();
