@@ -9,6 +9,8 @@ import com.astral.screens.factories.PlayerShipFactory;
 import com.astral.screens.factories.WorldObjectFactory;
 import com.astral.screens.shipbuilder.StarfieldShipBuilderScreen;
 import com.astral.screens.ui.PauseMenuRenderer;
+import com.astral.ui.HUDRenderer;
+import com.astral.ui.UITheme;
 import com.astral.systems.*;
 import com.astral.inventory.core.InventorySystem;
 import com.astral.inventory.core.InventoryGrid;
@@ -65,6 +67,7 @@ public class GameScreen implements Screen {
 
     // UI
     private PauseMenuRenderer pauseMenuRenderer;
+    private HUDRenderer hudRenderer;
     private Stage hudStage;
     private Window inventoryWindow;
     private boolean showInventory = false;
@@ -131,6 +134,9 @@ public class GameScreen implements Screen {
         // Initialize pause menu
         pauseMenuRenderer = new PauseMenuRenderer();
         pauseMenuRenderer.initialize();
+        
+        // Initialize HUD renderer
+        hudRenderer = new HUDRenderer();
     }
 
     private void initializeFactories() {
@@ -485,8 +491,42 @@ public class GameScreen implements Screen {
         } else {
             Gdx.input.setInputProcessor(inputSystem);
         }
+        
+        // Render Starfield-style HUD
+        if (!paused && !showInventory) {
+            updateHUDData();
+            hudRenderer.update(delta);
+            hudRenderer.render();
+        }
+        
         hudStage.act(delta);
         hudStage.draw();
+    }
+    
+    private void updateHUDData() {
+        // Update HUD with player data
+        if (playerEntity != null) {
+            // Get player health/shield from components (mock data for now)
+            hudRenderer.setHealth(85f, 100f);
+            hudRenderer.setShield(60f, 100f);
+            hudRenderer.setFuel(75f, 100f);
+            hudRenderer.setOxygen(90f, 100f);
+            
+            // Set speed and heading from transform
+            TransformComponent transform = playerEntity.get(TransformComponent.class);
+            if (transform != null) {
+                hudRenderer.setSpeed(50f, 500f); // Mock speed for now
+                hudRenderer.setHeading(transform.rotation.getYaw());
+                hudRenderer.setCoordinates(
+                    (int)transform.position.x,
+                    (int)transform.position.y,
+                    (int)transform.position.z
+                );
+            }
+            
+            // Set location
+            hudRenderer.setLocation("Sol System", "Near Test Planet");
+        }
     }
 
     private void updateCamera() {
@@ -558,6 +598,7 @@ public class GameScreen implements Screen {
         if (pauseMenuRenderer != null) pauseMenuRenderer.dispose();
         if (uiSystem != null) uiSystem.dispose();
         if (hudStage != null) hudStage.dispose();
+        if (hudRenderer != null) hudRenderer.dispose();
         // Font disposed with stage
     }
 }

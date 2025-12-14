@@ -1,31 +1,34 @@
 package com.astral.screens;
 
 import com.astral.AstralFrontier;
+import com.astral.ui.UIRenderer;
+import com.astral.ui.UITheme;
+import com.astral.ui.UIButton;
+import com.astral.ui.UIPanel;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.math.MathUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Main menu screen
+ * Main menu screen with Starfield-inspired UI
  */
 public class MenuScreen implements Screen {
 
     private final AstralFrontier game;
-    private SpriteBatch batch;
-    private ShapeRenderer shapeRenderer;
-    private BitmapFont font;
-    private BitmapFont titleFont;
-    private BitmapFont menuFont;
-
-    private String[] menuItems = {"New Game", "Continue", "Multiplayer", "Options", "Quit"};
+    private UIRenderer uiRenderer;
+    private UIPanel mainPanel;
+    private List<UIButton> menuButtons;
     private int selectedIndex = 0;
-
-    private float starfieldOffset = 0f;
+    
+    private float time = 0f;
+    private float[] starX, starY, starSpeed, starBrightness;
+    private static final int STAR_COUNT = 300;
 
     public MenuScreen(AstralFrontier game) {
         this.game = game;
@@ -33,115 +36,213 @@ public class MenuScreen implements Screen {
 
     @Override
     public void show() {
-        batch = new SpriteBatch();
-        shapeRenderer = new ShapeRenderer();
-
-        font = new BitmapFont();
-        font.setColor(Color.WHITE);
-
-        titleFont = new BitmapFont();
-        titleFont.getData().setScale(4f);
-        titleFont.setColor(0.7f, 0.85f, 1f, 1f);
-
-        menuFont = new BitmapFont();
-        menuFont.getData().setScale(2f);
-
+        uiRenderer = new UIRenderer();
+        menuButtons = new ArrayList<>();
+        
+        // Initialize starfield
+        starX = new float[STAR_COUNT];
+        starY = new float[STAR_COUNT];
+        starSpeed = new float[STAR_COUNT];
+        starBrightness = new float[STAR_COUNT];
+        
+        for (int i = 0; i < STAR_COUNT; i++) {
+            starX[i] = MathUtils.random(Gdx.graphics.getWidth());
+            starY[i] = MathUtils.random(Gdx.graphics.getHeight());
+            starSpeed[i] = MathUtils.random(5f, 30f);
+            starBrightness[i] = MathUtils.random(0.3f, 1f);
+        }
+        
+        createUI();
         Gdx.input.setCursorCatched(false);
+    }
+
+    private void createUI() {
+        int width = Gdx.graphics.getWidth();
+        int height = Gdx.graphics.getHeight();
+        
+        // Main menu panel - centered
+        float panelWidth = 400;
+        float panelHeight = 450;
+        float panelX = (width - panelWidth) / 2f;
+        float panelY = (height - panelHeight) / 2f - 50;
+        
+        mainPanel = new UIPanel(panelX, panelY, panelWidth, panelHeight);
+        mainPanel.show();
+        
+        // Menu buttons
+        String[] menuItems = {"NEW GAME", "CONTINUE", "MULTIPLAYER", "OPTIONS", "QUIT"};
+        float buttonWidth = 320;
+        float buttonHeight = 50;
+        float buttonSpacing = 15;
+        float startY = panelY + panelHeight - 100;
+        
+        for (int i = 0; i < menuItems.length; i++) {
+            float buttonX = panelX + (panelWidth - buttonWidth) / 2f;
+            float buttonY = startY - i * (buttonHeight + buttonSpacing);
+            
+            UIButton button = new UIButton(buttonX, buttonY, buttonWidth, buttonHeight, menuItems[i]);
+            button.setVisible(true);
+            menuButtons.add(button);
+        }
+        
+        // Set first button as selected
+        if (!menuButtons.isEmpty()) {
+            menuButtons.get(0).setHovered(true);
+        }
     }
 
     @Override
     public void render(float delta) {
+        time += delta;
+        uiRenderer.update(delta);
+        mainPanel.update(delta);
+        
+        float mouseX = Gdx.input.getX();
+        float mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+        boolean mouseDown = Gdx.input.isTouched();
+        
+        for (UIButton button : menuButtons) {
+            button.update(delta, mouseX, mouseY, mouseDown);
+        }
+        
         handleInput();
-
-        // Animate starfield
-        starfieldOffset += delta * 10f;
-
-        // Clear screen
-        Gdx.gl.glClearColor(0.02f, 0.02f, 0.05f, 1f);
+        
+        // Clear screen with dark space color
+        Gdx.gl.glClearColor(0.01f, 0.01f, 0.03f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        
         int width = Gdx.graphics.getWidth();
         int height = Gdx.graphics.getHeight();
-
-        // Draw animated starfield background
-        renderStarfield(width, height);
-
-        batch.begin();
-
-        // Draw title
-        String title = "ASTRAL FRONTIER";
-        float titleX = width / 2f - 250;
-        float titleY = height * 0.8f;
-        titleFont.draw(batch, title, titleX, titleY);
-
-        // Draw subtitle
-        font.setColor(0.5f, 0.6f, 0.8f, 1f);
-        font.draw(batch, "Explore the Galaxy. Forge Your Destiny.", titleX + 20, titleY - 50);
-
-        // Draw menu items
-        float menuStartY = height * 0.55f;
-        float menuSpacing = 60f;
-
-        for (int i = 0; i < menuItems.length; i++) {
-            float y = menuStartY - i * menuSpacing;
-
-            if (i == selectedIndex) {
-                // Selected item
-                menuFont.setColor(0.3f, 0.8f, 1f, 1f);
-
-                // Draw selection indicator - must end batch first
-                batch.end();
-                shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-                shapeRenderer.setColor(0.2f, 0.4f, 0.6f, 0.3f);
-                shapeRenderer.rect(width / 2f - 150, y - 35, 300, 50);
-                shapeRenderer.end();
-                batch.begin();
-
-                menuFont.draw(batch, "> " + menuItems[i], width / 2f - 100, y);
-            } else {
-                // Unselected item
-                menuFont.setColor(0.6f, 0.6f, 0.7f, 1f);
-                menuFont.draw(batch, menuItems[i], width / 2f - 80, y);
-            }
+        
+        // Render animated starfield
+        renderStarfield(delta, width, height);
+        
+        // Render main panel
+        mainPanel.render(uiRenderer);
+        
+        // Render title
+        renderTitle(width, height);
+        
+        // Render menu buttons
+        for (int i = 0; i < menuButtons.size(); i++) {
+            UIButton button = menuButtons.get(i);
+            button.setHovered(i == selectedIndex);
+            button.render(uiRenderer);
         }
-
-        // Draw version info
-        font.setColor(0.4f, 0.4f, 0.5f, 1f);
-        font.draw(batch, "v0.1.0 Alpha - LibGDX " + com.badlogic.gdx.Version.VERSION, 10, 30);
-
-        batch.end();
+        
+        // Render version info
+        renderVersionInfo(width);
     }
 
-    private void renderStarfield(int width, int height) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Point);
-
-        // Simple animated starfield
-        for (int i = 0; i < 200; i++) {
-            float seed = i * 1234.5678f;
-            float x = ((seed % width) + starfieldOffset * (0.5f + (i % 3) * 0.5f)) % width;
-            float y = (seed * 0.7f) % height;
-            float brightness = 0.3f + (i % 10) * 0.07f;
-
-            shapeRenderer.setColor(brightness, brightness, brightness + 0.1f, 1f);
-            shapeRenderer.point(x, y, 0);
+    private void renderStarfield(float delta, int width, int height) {
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        
+        uiRenderer.getShapeRenderer().begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+        
+        for (int i = 0; i < STAR_COUNT; i++) {
+            // Move stars
+            starX[i] += starSpeed[i] * delta;
+            if (starX[i] > width) {
+                starX[i] = 0;
+                starY[i] = MathUtils.random(height);
+            }
+            
+            // Twinkle effect
+            float twinkle = 0.7f + 0.3f * MathUtils.sin(time * 3f + i);
+            float brightness = starBrightness[i] * twinkle;
+            
+            // Draw star with glow
+            float size = starSpeed[i] > 20 ? 2f : 1f;
+            uiRenderer.getShapeRenderer().setColor(brightness, brightness, brightness + 0.1f, 1f);
+            uiRenderer.getShapeRenderer().circle(starX[i], starY[i], size);
         }
+        
+        uiRenderer.getShapeRenderer().end();
+    }
 
-        shapeRenderer.end();
+    private void renderTitle(int width, int height) {
+        uiRenderer.getSpriteBatch().begin();
+        
+        // Main title
+        uiRenderer.getFont().getData().setScale(3.5f);
+        uiRenderer.getFont().setColor(UITheme.ACCENT_CYAN);
+        
+        String title = "ASTRAL FRONTIER";
+        GlyphLayout layout = uiRenderer.getLayout();
+        layout.setText(uiRenderer.getFont(), title);
+        float titleX = (width - layout.width) / 2f;
+        float titleY = height * 0.85f;
+        
+        uiRenderer.getFont().draw(uiRenderer.getSpriteBatch(), title, titleX, titleY);
+        
+        // Subtitle
+        uiRenderer.getFont().getData().setScale(1.2f);
+        uiRenderer.getFont().setColor(UITheme.TEXT_SECONDARY);
+        
+        String subtitle = "Explore the Galaxy. Forge Your Destiny.";
+        layout.setText(uiRenderer.getFont(), subtitle);
+        float subtitleX = (width - layout.width) / 2f;
+        
+        uiRenderer.getFont().draw(uiRenderer.getSpriteBatch(), subtitle, subtitleX, titleY - 50);
+        
+        uiRenderer.getSpriteBatch().end();
+    }
+
+    private void renderVersionInfo(int width) {
+        uiRenderer.getSpriteBatch().begin();
+        
+        uiRenderer.getFont().getData().setScale(0.9f);
+        uiRenderer.getFont().setColor(UITheme.TEXT_MUTED);
+        uiRenderer.getFont().draw(uiRenderer.getSpriteBatch(), 
+            "v0.1.0 Alpha - LibGDX " + com.badlogic.gdx.Version.VERSION, 15, 25);
+        
+        // Controls hint
+        String controls = "[W/S] Navigate  [ENTER] Select  [ESC] Quit";
+        GlyphLayout layout = uiRenderer.getLayout();
+        layout.setText(uiRenderer.getFont(), controls);
+        uiRenderer.getFont().draw(uiRenderer.getSpriteBatch(), controls, width - layout.width - 15, 25);
+        
+        uiRenderer.getSpriteBatch().end();
     }
 
     private void handleInput() {
+        // Keyboard navigation
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP) || Gdx.input.isKeyJustPressed(Input.Keys.W)) {
-            selectedIndex = (selectedIndex - 1 + menuItems.length) % menuItems.length;
+            selectedIndex = (selectedIndex - 1 + menuButtons.size()) % menuButtons.size();
         }
-
+        
         if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN) || Gdx.input.isKeyJustPressed(Input.Keys.S)) {
-            selectedIndex = (selectedIndex + 1) % menuItems.length;
+            selectedIndex = (selectedIndex + 1) % menuButtons.size();
         }
-
+        
+        // Mouse hover detection
+        float mouseX = Gdx.input.getX();
+        float mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+        
+        for (int i = 0; i < menuButtons.size(); i++) {
+            UIButton button = menuButtons.get(i);
+            if (button.contains(mouseX, mouseY)) {
+                selectedIndex = i;
+            }
+        }
+        
+        // Selection
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             selectMenuItem(selectedIndex);
         }
-
+        
+        // Mouse click
+        if (Gdx.input.justTouched()) {
+            for (int i = 0; i < menuButtons.size(); i++) {
+                UIButton button = menuButtons.get(i);
+                if (button.contains(mouseX, mouseY)) {
+                    selectMenuItem(i);
+                    break;
+                }
+            }
+        }
+        
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
@@ -149,47 +250,30 @@ public class MenuScreen implements Screen {
 
     private void selectMenuItem(int index) {
         switch (index) {
-            case 0 -> { // New Game
-                game.startGame();
-            }
-            case 1 -> { // Continue
-                // TODO: Load saved game
-                game.startGame();
-            }
-            case 2 -> { // Multiplayer
-                // TODO: Show multiplayer lobby
-            }
-            case 3 -> { // Options
-                // TODO: Show options menu
-            }
-            case 4 -> { // Quit
-                Gdx.app.exit();
-            }
+            case 0 -> game.startGame();           // New Game
+            case 1 -> game.startGame();           // Continue (TODO: load save)
+            case 2 -> { }                         // Multiplayer (TODO)
+            case 3 -> { }                         // Options (TODO)
+            case 4 -> Gdx.app.exit();             // Quit
         }
     }
 
     @Override
     public void resize(int width, int height) {
+        createUI(); // Recreate UI on resize
     }
 
     @Override
-    public void pause() {
-    }
+    public void pause() { }
 
     @Override
-    public void resume() {
-    }
+    public void resume() { }
 
     @Override
-    public void hide() {
-    }
+    public void hide() { }
 
     @Override
     public void dispose() {
-        if (batch != null) batch.dispose();
-        if (shapeRenderer != null) shapeRenderer.dispose();
-        if (font != null) font.dispose();
-        if (titleFont != null) titleFont.dispose();
-        if (menuFont != null) menuFont.dispose();
+        if (uiRenderer != null) uiRenderer.dispose();
     }
 }

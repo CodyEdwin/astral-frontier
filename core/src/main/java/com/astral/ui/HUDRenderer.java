@@ -370,6 +370,22 @@ public class HUDRenderer implements Disposable {
         this.inCombat = inCombat;
     }
     
+    public void setSpeed(float speed, float maxSpeed) {
+        // Could add speed display later
+    }
+    
+    public void setHeading(float heading) {
+        this.playerYaw = heading;
+    }
+    
+    public void setCoordinates(int x, int y, int z) {
+        // Could add coordinate display later
+    }
+    
+    public void setLocation(String system, String region) {
+        this.locationName = (system + " - " + region).toUpperCase();
+    }
+    
     public void triggerHitMarker() {
         this.hitTimer = 0.3f;
     }

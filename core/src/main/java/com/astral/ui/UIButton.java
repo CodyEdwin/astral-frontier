@@ -267,6 +267,7 @@ public class UIButton {
     public String getLabel() { return label; }
     public boolean isEnabled() { return enabled; }
     public boolean isHovered() { return hovered; }
+    public void setHovered(boolean hovered) { this.hovered = hovered; }
     public boolean isPressed() { return pressed; }
     
     public void setPosition(float x, float y) {
