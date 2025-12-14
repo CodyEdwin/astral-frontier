@@ -75,10 +75,12 @@ public class GameScreen implements Screen {
 
     // Entities
     private Entity playerEntity;
+    private Entity starEntity;
+    private com.badlogic.gdx.utils.Array<Entity> planetEntities = new com.badlogic.gdx.utils.Array<>();
 
-    // Test planet config
-    private static final Vector3 PLANET_POSITION = new Vector3(0, 0, -500);
-    private static final float PLANET_RADIUS = 100f;
+    // Universe integration
+    private UniverseManager.StarSystemData currentSystem;
+    private static final float SPACE_SCALE = 3f; // Scale factor for orbit distances
 
     private boolean paused = false;
 
@@ -152,15 +154,61 @@ public class GameScreen implements Screen {
         // Create asteroids
         worldObjectFactory.createAsteroids(world, 20, 500f);
 
-        // Create test planet
-        worldObjectFactory.createPlanet(
-            world,
-            PLANET_POSITION,
-            PLANET_RADIUS,
-            new Color(0.2f, 0.5f, 0.3f, 1f),
-            "Test Planet",
-            transitionManager
-        );
+        // Initialize universe and spawn current system
+        initializeUniverse();
+        spawnCurrentSystem();
+    }
+    
+    private void initializeUniverse() {
+        if (UniverseManager.getInstance() == null) {
+            UniverseManager.initialize(System.currentTimeMillis());
+        }
+        currentSystem = UniverseManager.getInstance().getCurrentSystem();
+        Gdx.app.log("GameScreen", "Current system: " + currentSystem.name + " (" + currentSystem.starType + ")");
+    }
+    
+    private void spawnCurrentSystem() {
+        // Clear old celestial bodies
+        clearCelestialBodies();
+        
+        if (currentSystem == null) {
+            Gdx.app.log("GameScreen", "No current system to spawn!");
+            return;
+        }
+        
+        // Create star at center
+        starEntity = worldObjectFactory.createStar(world, currentSystem, SPACE_SCALE);
+        
+        // Create all planets
+        planetEntities = worldObjectFactory.createPlanetsFromSystem(world, currentSystem, transitionManager, SPACE_SCALE);
+        
+        Gdx.app.log("GameScreen", "Spawned " + currentSystem.name + " system with " + planetEntities.size + " planets");
+        
+        // Update HUD location
+        if (hudRenderer != null) {
+            String nearestPlanet = currentSystem.planets.size > 0 ? currentSystem.planets.get(0).name : "Deep Space";
+            hudRenderer.setLocation(currentSystem.name, nearestPlanet);
+        }
+    }
+    
+    private void clearCelestialBodies() {
+        if (starEntity != null) {
+            world.destroyEntity(starEntity);
+            starEntity = null;
+        }
+        for (Entity planet : planetEntities) {
+            world.destroyEntity(planet);
+        }
+        planetEntities.clear();
+        world.processPending();
+    }
+    
+    /**
+     * Called when returning from StarMap after jumping to a new system
+     */
+    public void onSystemChanged() {
+        currentSystem = UniverseManager.getInstance().getCurrentSystem();
+        spawnCurrentSystem();
     }
 
     private void setupInput() {
@@ -484,7 +532,12 @@ public class GameScreen implements Screen {
         transitionManager.update(delta);
 
         // Update UI with planet info
-        uiSystem.setPlanetInfo("Test Planet", PLANET_POSITION);
+        String planetName = currentSystem != null && currentSystem.planets.size > 0 
+            ? currentSystem.planets.get(0).name : "Unknown";
+        Vector3 planetPos = planetEntities.size > 0 
+            ? planetEntities.get(0).get(TransformComponent.class).position 
+            : new Vector3(0, 0, -500);
+        uiSystem.setPlanetInfo(planetName, planetPos);
         uiSystem.setTransitionState(
             transitionManager.getCurrentState().name(),
             transitionManager.getTransitionProgress()

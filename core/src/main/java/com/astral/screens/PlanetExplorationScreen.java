@@ -155,8 +155,9 @@ public class PlanetExplorationScreen implements Screen {
         // Initialize UI
         ui.initialize();
         
-        // Initialize resource gathering
+        // Initialize resource gathering with terrain reference
         resourceGathering = new ResourceGathering();
+        resourceGathering.setTerrain(planetSurface);
         initResourceGatheringFromUniverse();
 
         // Set inventory data

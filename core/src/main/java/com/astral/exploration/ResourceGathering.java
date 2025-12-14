@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
+import com.astral.procedural.PlanetSurface;
 import java.util.Random;
 
 /**
@@ -52,6 +53,7 @@ public class ResourceGathering implements Disposable {
     private PlanetData currentPlanet;
     private long planetSeed;
     private Random random;
+    private PlanetSurface terrain;
     
     // Rendering
     private ShapeRenderer shapeRenderer;
@@ -74,13 +76,38 @@ public class ResourceGathering implements Disposable {
      * Initialize for a specific planet
      */
     public void initForPlanet(long seed, PlanetData planet) {
+        initForPlanet(seed, planet, null);
+    }
+    
+    /**
+     * Initialize for a specific planet with terrain reference for height sampling
+     */
+    public void initForPlanet(long seed, PlanetData planet, PlanetSurface terrain) {
         this.planetSeed = seed;
         this.currentPlanet = planet;
         this.random = new Random(seed);
+        this.terrain = terrain;
         activeNodes.clear();
         
         // Generate initial nodes based on planet resources
         generateInitialNodes();
+    }
+    
+    /**
+     * Set terrain reference for height sampling
+     */
+    public void setTerrain(PlanetSurface terrain) {
+        this.terrain = terrain;
+        // Update existing node heights
+        updateNodeHeights();
+    }
+    
+    private void updateNodeHeights() {
+        if (terrain == null) return;
+        for (ResourceNode node : activeNodes) {
+            float height = terrain.getHeightAt(node.position.x, node.position.z);
+            node.position.y = height + 1f; // Slightly above terrain
+        }
     }
     
     private void generateInitialNodes() {
@@ -94,11 +121,10 @@ public class ResourceGathering implements Disposable {
                 ResourceNode node = new ResourceNode();
                 node.resourceType = mapToResourceName(deposit.type);
                 node.gatherType = getGatherTypeFor(deposit.type);
-                node.position = new Vector3(
-                    (random.nextFloat() - 0.5f) * 200f,
-                    0f, // Will be set to terrain height
-                    (random.nextFloat() - 0.5f) * 200f
-                );
+                float x = (random.nextFloat() - 0.5f) * 200f;
+                float z = (random.nextFloat() - 0.5f) * 200f;
+                float y = terrain != null ? terrain.getHeightAt(x, z) + 1f : 1f;
+                node.position = new Vector3(x, y, z);
                 node.remainingYield = 3 + random.nextInt(5);
                 node.respawnTime = 30f + random.nextFloat() * 60f;
                 node.deposit = deposit;
@@ -142,10 +168,13 @@ public class ResourceGathering implements Disposable {
      * Update gathering system
      */
     public void update(float delta, Vector3 playerPosition, boolean interactPressed) {
-        // Update node heights (if terrain available)
-        for (ResourceNode node : activeNodes) {
-            if (node.position.y == 0f) {
-                node.position.y = 1f; // Default height, should get from terrain
+        // Update node heights from terrain
+        if (terrain != null) {
+            for (ResourceNode node : activeNodes) {
+                if (node.position.y <= 1f) {
+                    float height = terrain.getHeightAt(node.position.x, node.position.z);
+                    node.position.y = height + 1f;
+                }
             }
         }
         

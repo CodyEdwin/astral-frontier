@@ -429,6 +429,10 @@ public class StarMapScreen implements Screen {
             if (universe.jumpToSystem(selectedSystem)) {
                 refreshNearbySystems();
                 selectedSystem = null;
+                // Notify GameScreen to respawn the new system
+                if (previousScreen instanceof GameScreen) {
+                    ((GameScreen) previousScreen).onSystemChanged();
+                }
             }
         }
         
