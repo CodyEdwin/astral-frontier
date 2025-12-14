@@ -11,6 +11,7 @@ import com.astral.screens.shipbuilder.StarfieldShipBuilderScreen;
 import com.astral.screens.ui.PauseMenuRenderer;
 import com.astral.ui.HUDRenderer;
 import com.astral.ui.UITheme;
+import com.astral.game.UniverseManager;
 import com.astral.systems.*;
 import com.astral.inventory.core.InventorySystem;
 import com.astral.inventory.core.InventoryGrid;
@@ -443,6 +444,25 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.L)) {
             game.landOnPlanet(12345L, PlanetType.DESERT, "Khepri Prime");
         }
+        
+        // Star Map - open with M key
+        if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+            openStarMap();
+        }
+    }
+    
+    private void openStarMap() {
+        inputSystem.setMouseLocked(false);
+        Gdx.input.setCursorCatched(false);
+        
+        // Initialize universe if needed
+        if (UniverseManager.getInstance() == null) {
+            UniverseManager.initialize(System.currentTimeMillis());
+        }
+        
+        StarMapScreen starMap = new StarMapScreen(game, this);
+        game.setScreen(starMap);
+        Gdx.app.log("GameScreen", "Opening Star Map...");
     }
 
     private void openShipBuilder() {
