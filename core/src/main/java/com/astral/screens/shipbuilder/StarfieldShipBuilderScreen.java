@@ -552,7 +552,7 @@ public class StarfieldShipBuilderScreen implements Screen {
         // Draw ghost part as actual model with transparency
         if (placingPart && ghostModelInstance != null) {
             Gdx.gl.glEnable(GL20.GL_BLEND);
-            Gdx.gl.blendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             ghostModelInstance.transform.setToTranslation(ghostPosition);
             modelBatch.begin(camera);
             modelBatch.render(ghostModelInstance, environment);
