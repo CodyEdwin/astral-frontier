@@ -47,7 +47,7 @@ jobs:
           accept-android-sdk-licenses: 'true'
           log-accepted-android-sdk-licenses: 'true'
           cmdline-tools-version: 'latest'
-          packages: 'platform-tools;platforms;android-34;build-tools;34.0.0'
+          packages: tools platform-tools
 
       - name: Run Gradle build (desktop + android) using wrapper
         run: gradle :desktop:build :android:assembleDebug --no-daemon --info --stacktrace
