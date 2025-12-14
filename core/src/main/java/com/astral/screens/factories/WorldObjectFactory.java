@@ -26,7 +26,7 @@ import com.astral.game.UniverseManager.*;
 public class WorldObjectFactory implements Disposable {
 
     private Model asteroidModel;
-    private Model planetModel;
+    private final Array<Model> createdModels = new Array<>();
     private final ModelBuilder modelBuilder = new ModelBuilder();
 
     /**
@@ -115,6 +115,7 @@ public class WorldObjectFactory implements Disposable {
         Model starModel = modelBuilder.createSphere(starRadius * 2, starRadius * 2, starRadius * 2, 32, 32,
                 new Material(ColorAttribute.createDiffuse(starColor), ColorAttribute.createEmissive(starColor)),
                 Usage.Position | Usage.Normal);
+        createdModels.add(starModel);
         
         Entity star = world.createEntity();
         star.setTag("Star");
@@ -161,12 +162,11 @@ public class WorldObjectFactory implements Disposable {
     
     private Entity createPlanetFromData(World world, Vector3 position, float radius, Color color, 
                                         PlanetData planetData, TransitionManager transitionManager) {
-        if (planetModel != null) {
-            planetModel.dispose();
-        }
-        planetModel = modelBuilder.createSphere(radius * 2, radius * 2, radius * 2, 32, 32,
+        // Create unique model for each planet
+        Model model = modelBuilder.createSphere(radius * 2, radius * 2, radius * 2, 32, 32,
                 new Material(ColorAttribute.createDiffuse(color)),
                 Usage.Position | Usage.Normal);
+        createdModels.add(model);
 
         Entity planet = world.createEntity();
         planet.setTag("Planet_" + planetData.name);
@@ -176,7 +176,7 @@ public class WorldObjectFactory implements Disposable {
         planet.add(transform);
 
         RenderComponent render = new RenderComponent();
-        render.setModel(new ModelInstance(planetModel));
+        render.setModel(new ModelInstance(model));
         planet.add(render);
 
         world.processPending();
@@ -206,15 +206,22 @@ public class WorldObjectFactory implements Disposable {
         };
     }
 
+    /**
+     * Dispose models for current celestial bodies (call before creating new system)
+     */
+    public void disposeSystemModels() {
+        for (Model m : createdModels) {
+            m.dispose();
+        }
+        createdModels.clear();
+    }
+
     @Override
     public void dispose() {
         if (asteroidModel != null) {
             asteroidModel.dispose();
             asteroidModel = null;
         }
-        if (planetModel != null) {
-            planetModel.dispose();
-            planetModel = null;
-        }
+        disposeSystemModels();
     }
 }

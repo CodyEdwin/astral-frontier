@@ -201,6 +201,9 @@ public class GameScreen implements Screen {
         }
         planetEntities.clear();
         world.processPending();
+        
+        // Dispose old models to prevent memory leaks
+        worldObjectFactory.disposeSystemModels();
     }
     
     /**
