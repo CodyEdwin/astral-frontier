@@ -1,5 +1,5 @@
-# This workflow builds the Java/Android project with the Gradle wrapper
-
+# This workflow builds the Java/Android project with Gradle using the Gradle wrapper,
+# and also installs a system Gradle via gradle/actions/setup-gradle so Gradle is available.
 name: Java CI with Gradle
 
 on:
@@ -17,6 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -33,6 +36,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Set up Gradle (system)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5' # optional: pick a Gradle version compatible with your project
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -43,10 +51,7 @@ jobs:
             build-tools;34.0.0
             cmdline-tools;latest
 
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
-
-      - name: Run Gradle wrapper build (desktop + android)
+      - name: Run Gradle build (desktop + android) using wrapper
         run: ./gradlew :desktop:build :android:assembleDebug --no-daemon --info --stacktrace
 
       - name: Upload Android APK(s)
