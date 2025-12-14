@@ -11,6 +11,8 @@ An AAA-quality open-world space exploration RPG featuring seamless transitions b
 - **Deep RPG Systems**: Inventory, quests, skills, and progression
 - **Combat**: Space dogfighting and FPS ground combat
 
+For detailed game design and future development plans, see [DEVELOPMENT_GDD.md](DEVELOPMENT_GDD.md).
+
 ## Technical Stack
 
 - **Engine**: Java 17+ / LibGDX 1.12+

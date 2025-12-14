@@ -10,6 +10,9 @@ import com.astral.screens.PlanetExplorationScreen;
 import com.astral.procedural.PlanetType;
 import com.astral.procedural.ProceduralAssetManager;
 import com.astral.systems.*;
+import com.astral.universe.UniverseSystem;
+import com.astral.inventory.core.InventorySystem;
+import com.astral.planetary.core.PlanetarySystem;
 import com.astral.ecs.World;
 import com.astral.utils.GameConfig;
 
@@ -37,6 +40,9 @@ public class AstralFrontier extends Game {
     private AudioSystem audioSystem;
     private GameLogicSystem gameLogicSystem;
     private UISystem uiSystem;
+    private UniverseSystem universeSystem;
+    private InventorySystem inventorySystem;
+    private PlanetarySystem planetarySystem;
 
     // State
     private GameConfig config;
@@ -88,6 +94,9 @@ public class AstralFrontier extends Game {
         audioSystem = new AudioSystem(ecsWorld);
         gameLogicSystem = new GameLogicSystem(ecsWorld);
         uiSystem = new UISystem(ecsWorld);
+        universeSystem = new UniverseSystem(ecsWorld);
+        inventorySystem = new InventorySystem(ecsWorld);
+        planetarySystem = new PlanetarySystem(ecsWorld);
 
         // Register systems with ECS world
         ecsWorld.addSystem(inputSystem);
@@ -97,6 +106,9 @@ public class AstralFrontier extends Game {
         ecsWorld.addSystem(audioSystem);
         ecsWorld.addSystem(gameLogicSystem);
         ecsWorld.addSystem(uiSystem);
+        ecsWorld.addSystem(universeSystem);
+        ecsWorld.addSystem(inventorySystem);
+        ecsWorld.addSystem(planetarySystem);
     }
 
     @Override
@@ -166,6 +178,9 @@ public class AstralFrontier extends Game {
     public AudioSystem getAudioSystem() { return audioSystem; }
     public GameConfig getConfig() { return config; }
     public GameLogicSystem getGameLogicSystem() { return gameLogicSystem; }
+    public UniverseSystem getUniverseSystem() { return universeSystem; }
+    public InventorySystem getInventorySystem() { return inventorySystem; }
+    public PlanetarySystem getPlanetarySystem() { return planetarySystem; }
     public ProceduralAssetManager getProceduralAssets() { return proceduralAssets; }
 
     public void showMainMenu() {

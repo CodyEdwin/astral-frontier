@@ -2,7 +2,10 @@ package com.astral.desktop;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
+import com.badlogic.gdx.utils.Timer;
 import com.astral.AstralFrontier;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Desktop launcher for AstralFrontier
@@ -27,5 +30,18 @@ public class DesktopLauncher {
         //config.setWindowIcon("icons/icon128.png", "icons/icon64.png", "icons/icon32.png", "icons/icon16.png");
 
         new Lwjgl3Application(new AstralFrontier(), config);
+
+        // Make window always on top after initialization
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                try {
+                    long window = ((Lwjgl3Graphics) com.badlogic.gdx.Gdx.graphics).getWindow().getWindowHandle();
+                    GLFW.glfwSetWindowAttrib(window, GLFW.GLFW_FLOATING, GLFW.GLFW_TRUE);
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
+        }, 0.1f);
     }
 }

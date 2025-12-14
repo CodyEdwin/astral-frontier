@@ -1,6 +1,6 @@
 package com.astral.exploration;
 
-import com.astral.combat.GltfWeaponRenderer;
+import com.astral.combat.ProceduralWeaponRenderer;
 import com.astral.combat.GroundProjectile;
 import com.astral.combat.WeaponRenderer;
 import com.astral.combat.WeaponType;
@@ -22,7 +22,7 @@ public class WeaponSystem implements Disposable {
 
     // Weapon renderers
     private WeaponRenderer weaponRenderer;
-    private GltfWeaponRenderer gltfWeaponRenderer;
+    private ProceduralWeaponRenderer proceduralWeaponRenderer;
 
     // Current weapon state
     private WeaponType currentWeapon = WeaponType.PLASMA_RIFLE;
@@ -53,8 +53,8 @@ public class WeaponSystem implements Disposable {
     public void initialize(ShapeRenderer shapeRenderer, Camera camera) {
         // Initialize renderers
         weaponRenderer = new WeaponRenderer(shapeRenderer);
-        gltfWeaponRenderer = new GltfWeaponRenderer();
-        gltfWeaponRenderer.initialize(camera);
+        proceduralWeaponRenderer = new ProceduralWeaponRenderer();
+        proceduralWeaponRenderer.initialize(camera);
 
         // Initialize ammo
         WeaponType[] weapons = WeaponType.values();
@@ -121,9 +121,9 @@ public class WeaponSystem implements Disposable {
         aiming = Gdx.input.isButtonPressed(Input.Buttons.RIGHT) && weaponEquipped && !reloading && !isSwitching;
         weaponRenderer.update(delta, isMoving, aiming, justFired, isSwitching);
 
-        // Update GLTF weapon if using PLASMA_RIFLE
-        if (currentWeapon == WeaponType.PLASMA_RIFLE && gltfWeaponRenderer != null && gltfWeaponRenderer.isInitialized()) {
-            gltfWeaponRenderer.update(delta, camera, isMoving, aiming, justFired, reloading);
+        // Update procedural weapon for all weapons
+        if (proceduralWeaponRenderer != null && proceduralWeaponRenderer.isInitialized()) {
+            proceduralWeaponRenderer.update(delta, camera, isMoving, aiming, justFired, reloading);
         }
 
         // Equip/unequip weapon
@@ -218,20 +218,16 @@ public class WeaponSystem implements Disposable {
     }
 
     public void render() {
-        boolean useGltfWeapon = currentWeapon == WeaponType.PLASMA_RIFLE &&
-                                gltfWeaponRenderer != null && gltfWeaponRenderer.isInitialized();
-
-        if (weaponEquipped && useGltfWeapon) {
+        // Render procedural weapon for all weapons
+        if (weaponEquipped && proceduralWeaponRenderer != null && proceduralWeaponRenderer.isInitialized()) {
             Gdx.gl.glClear(com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT);
-            gltfWeaponRenderer.render();
+            proceduralWeaponRenderer.render();
         }
     }
 
     public void renderWeapon2D() {
-        boolean useGltfWeapon = currentWeapon == WeaponType.PLASMA_RIFLE &&
-                                gltfWeaponRenderer != null && gltfWeaponRenderer.isInitialized();
-
-        if (weaponEquipped && !useGltfWeapon) {
+        // Render 2D weapon UI for all weapons
+        if (weaponEquipped) {
             int ammo = weaponAmmo[currentWeaponIndex];
             int maxAmmo = currentWeapon.maxAmmo;
             float reloadProgress = reloading ? 1f - (reloadTimer / currentWeapon.reloadTime) : 0f;
@@ -257,6 +253,6 @@ public class WeaponSystem implements Disposable {
         if (scatterGunSound != null) scatterGunSound.dispose();
         if (railCannonSound != null) railCannonSound.dispose();
         if (pulseSMGSound != null) pulseSMGSound.dispose();
-        if (gltfWeaponRenderer != null) gltfWeaponRenderer.dispose();
+        if (proceduralWeaponRenderer != null) proceduralWeaponRenderer.dispose();
     }
 }

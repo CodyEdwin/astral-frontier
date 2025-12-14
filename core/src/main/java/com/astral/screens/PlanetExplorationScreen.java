@@ -149,6 +149,13 @@ public class PlanetExplorationScreen implements Screen {
         // Initialize UI
         ui.initialize();
 
+        // Set inventory data
+        ui.setPlayerInventory(game.getInventorySystem().getInventoryGrid());
+        ui.setSkillSystem(game.getInventorySystem().getSkills());
+        ui.setEquipmentManager(game.getInventorySystem().getEquipmentManager());
+        ui.setCraftingSystem(game.getInventorySystem().getCraftingSystem());
+        ui.setGameInputProcessor(inputSystem);
+
         // Initialize weapon system
         weaponSystem.initialize(
             ui.getShapeRenderer(),
@@ -236,6 +243,12 @@ public class PlanetExplorationScreen implements Screen {
                 "PlanetExploration",
                 "Debug info: " + (showDebugInfo ? "ON" : "OFF")
             );
+        }
+
+        // Toggle inventory UI
+        if (Gdx.input.isKeyJustPressed(Input.Keys.I)) {
+            ui.toggleInventoryUI();
+            inputSystem.setMouseLocked(!ui.isInventoryUIVisible());
         }
 
         // Cycle weather (debug)
