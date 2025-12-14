@@ -1,4 +1,4 @@
-# This workflow builds the Java/Android project with Gradle using the Gradle wrapper
+# This workflow builds the Java/Android project with the Gradle wrapper
 
 name: Java CI with Gradle
 
@@ -43,8 +43,11 @@ jobs:
             build-tools;34.0.0
             cmdline-tools;latest
 
-      - name: Run Gradle build (desktop + android)
-        run: ./gradlew --info :desktop:build :android:assembleDebug --no-daemon --stacktrace
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run Gradle wrapper build (desktop + android)
+        run: ./gradlew :desktop:build :android:assembleDebug --no-daemon --info --stacktrace
 
       - name: Upload Android APK(s)
         uses: actions/upload-artifact@v4
