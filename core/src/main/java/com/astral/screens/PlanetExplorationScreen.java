@@ -6,6 +6,9 @@ import com.astral.exploration.CombatManager;
 import com.astral.exploration.ExplorationUI;
 import com.astral.exploration.PlayerController;
 import com.astral.exploration.WeaponSystem;
+import com.astral.exploration.ResourceGathering;
+import com.astral.game.UniverseManager;
+import com.astral.game.UniverseManager.*;
 import com.astral.procedural.AtmosphericEffects;
 import com.astral.procedural.PlanetEnvironmentGenerator;
 import com.astral.procedural.PlanetSurface;
@@ -62,6 +65,9 @@ public class PlanetExplorationScreen implements Screen {
 
     // Debug
     private boolean showDebugInfo = false;
+    
+    // Resource gathering
+    private ResourceGathering resourceGathering;
 
     public PlanetExplorationScreen(
         AstralFrontier game,
@@ -148,6 +154,10 @@ public class PlanetExplorationScreen implements Screen {
 
         // Initialize UI
         ui.initialize();
+        
+        // Initialize resource gathering
+        resourceGathering = new ResourceGathering();
+        initResourceGatheringFromUniverse();
 
         // Set inventory data
         ui.setPlayerInventory(game.getInventorySystem().getInventoryGrid());
@@ -220,6 +230,10 @@ public class PlanetExplorationScreen implements Screen {
             playerController.getPosition(),
             planetSurface
         );
+        
+        // Update resource gathering
+        boolean interactPressed = Gdx.input.isKeyPressed(Input.Keys.E);
+        resourceGathering.update(delta, playerController.getPosition(), interactPressed);
 
         // Render scene
         renderScene(delta);
@@ -361,6 +375,98 @@ public class PlanetExplorationScreen implements Screen {
         if (showDebugInfo) {
             renderDebugInfo();
         }
+        
+        // Render resource gathering UI
+        resourceGathering.render(playerController.getPosition());
+    }
+    
+    /**
+     * Initialize resource gathering based on universe data
+     */
+    private void initResourceGatheringFromUniverse() {
+        try {
+            UniverseManager universe = UniverseManager.getInstance();
+            if (universe != null && universe.getCurrentSystem() != null) {
+                StarSystemData system = universe.getCurrentSystem();
+                // Find planet by name or use first landable
+                for (PlanetData planet : system.planets) {
+                    if (planet.name.equals(planetName) || (planet.landable && planetName.contains(planet.name))) {
+                        resourceGathering.initForPlanet(planet.seed, planet);
+                        Gdx.app.log("PlanetExploration", "Initialized resources for " + planet.name);
+                        return;
+                    }
+                }
+                // Fallback - use first landable planet
+                for (PlanetData planet : system.planets) {
+                    if (planet.landable) {
+                        resourceGathering.initForPlanet(planet.seed, planet);
+                        Gdx.app.log("PlanetExploration", "Fallback: using resources from " + planet.name);
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Gdx.app.log("PlanetExploration", "Could not init resources from universe: " + e.getMessage());
+        }
+        
+        // Create default resources if universe not available
+        createDefaultResources();
+    }
+    
+    private void createDefaultResources() {
+        // Create a mock planet with resources based on planet type
+        PlanetData mockPlanet = new PlanetData();
+        mockPlanet.seed = planetSeed;
+        mockPlanet.name = planetName;
+        mockPlanet.type = convertPlanetType(planetType);
+        
+        // Generate resources based on type
+        java.util.Random r = new java.util.Random(planetSeed);
+        java.util.ArrayList<ResourceDeposit> deposits = new java.util.ArrayList<>();
+        
+        deposits.add(new ResourceDeposit(ResourceType.IRON, 100 + r.nextInt(200)));
+        deposits.add(new ResourceDeposit(ResourceType.COPPER, 50 + r.nextInt(150)));
+        
+        switch (planetType) {
+            case FOREST -> {
+                deposits.add(new ResourceDeposit(ResourceType.WOOD, 200 + r.nextInt(300)));
+                deposits.add(new ResourceDeposit(ResourceType.WATER, 300 + r.nextInt(400)));
+            }
+            case OCEAN -> {
+                deposits.add(new ResourceDeposit(ResourceType.FISH, 200 + r.nextInt(400)));
+                deposits.add(new ResourceDeposit(ResourceType.WATER, 500 + r.nextInt(500)));
+            }
+            case DESERT -> {
+                deposits.add(new ResourceDeposit(ResourceType.SILICON, 150 + r.nextInt(200)));
+                if (r.nextFloat() < 0.3f) deposits.add(new ResourceDeposit(ResourceType.GOLD, 30 + r.nextInt(50)));
+            }
+            case ICE -> {
+                deposits.add(new ResourceDeposit(ResourceType.WATER, 200 + r.nextInt(300)));
+                deposits.add(new ResourceDeposit(ResourceType.RARE_GAS, 50 + r.nextInt(100)));
+            }
+            case LAVA -> {
+                deposits.add(new ResourceDeposit(ResourceType.RARE_METALS, 50 + r.nextInt(100)));
+                deposits.add(new ResourceDeposit(ResourceType.TITANIUM, 40 + r.nextInt(80)));
+            }
+            default -> {
+                deposits.add(new ResourceDeposit(ResourceType.SILICON, 50 + r.nextInt(100)));
+            }
+        }
+        
+        mockPlanet.resources = deposits.toArray(new ResourceDeposit[0]);
+        resourceGathering.initForPlanet(planetSeed, mockPlanet);
+        Gdx.app.log("PlanetExploration", "Created default resources for " + planetName);
+    }
+    
+    private UniverseManager.PlanetType convertPlanetType(PlanetType type) {
+        return switch (type) {
+            case FOREST -> UniverseManager.PlanetType.TERRAN;
+            case OCEAN -> UniverseManager.PlanetType.OCEAN;
+            case DESERT -> UniverseManager.PlanetType.DESERT;
+            case ICE -> UniverseManager.PlanetType.ICE;
+            case LAVA -> UniverseManager.PlanetType.MOLTEN;
+            default -> UniverseManager.PlanetType.ROCKY;
+        };
     }
 
     /**
@@ -522,6 +628,7 @@ public class PlanetExplorationScreen implements Screen {
         if (ui != null) ui.dispose();
         if (environmentGenerator != null) environmentGenerator.dispose();
         if (atmosphericEffects != null) atmosphericEffects.dispose();
+        if (resourceGathering != null) resourceGathering.dispose();
 
         environmentObjects.clear();
 
