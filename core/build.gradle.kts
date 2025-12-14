@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    eclipse
+   // eclipse
 }
 
 val gdxVersion: String by project
