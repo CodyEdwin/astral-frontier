@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application") version "8.2.0" apply true
+    id("com.android.application") version "8.7.0" apply true
     //id("org.jetbrains.kotlin.android") version "1.9.0" apply true // uncomment if using Kotlin
 }
 
